@@ -32,3 +32,5 @@
 *.app
 
 build
+3rd_party/glog/
+3rd_party/*
