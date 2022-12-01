@@ -21,3 +21,4 @@ int main(int argc, char** argv) {
     std::cout<<"debug:"<<s.stride_at(3)<<std::endl;
     return 0;
 }
+
