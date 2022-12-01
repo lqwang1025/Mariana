@@ -16,7 +16,7 @@ ExternalProject_Add(glog
   BUILD_COMMAND     ${GLOG_MAKE}
   INSTALL_COMMAND   ${GLOG_INSTALL})
 
-set(GLOG_LIB_DIR ${GLOG_ROOT}/lib/libglog.a)
+set(GLOG_LIB_DIR ${GLOG_ROOT}/lib)
 set(GLOG_INCLUDE_DIR  ${GLOG_ROOT}/include)
 
 link_directories(${GLOG_LIB_DIR})

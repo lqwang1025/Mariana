@@ -36,7 +36,6 @@ namespace mariana {
 #define OS_RELEASE "@_OS_RELEASE@"
 #define OS_VERSION "@_OS_VERSION@"
 #define OS_PLATFORM "@_OS_PLATFORM@"
-#define SYSTEM_PROCESSOR @CMAKE_HOST_SYSTEM_PROCESSOR@
 
 } // namespace mariana
 

@@ -10,11 +10,5 @@
  */
 
 #include <core/tensor.h>
-
-using namespace std;
-
-int main(int argc, char** argv)
-{
-
-  return 0;
-}
+#include <core/macros/macros.h>
+#include <core/utils/arrary_ref.h>
