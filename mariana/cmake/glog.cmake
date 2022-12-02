@@ -4,7 +4,7 @@ set(GLOG_ROOT ${CMAKE_SOURCE_DIR}/3rd_party/glog)
 set(GLOG_GIT_TAG  v0.6.0)
 set(GLOG_GIT_URL https://github.com/google/glog)
 set(GLOG_CONFIGURE cd ${GLOG_ROOT}/src/glog && cmake -B build -D CMAKE_INSTALL_PREFIX=${GLOG_ROOT}
-  -D BUILD_SHARED_LIBS=OFF -D WITH_GFLAGS=OFF -D WITH_GTEST=OFF -D WITH_UNWIND=OFF .)
+  -D CMAKE_POSITION_INDEPENDENT_CODE=ON -D BUILD_SHARED_LIBS=OFF -D WITH_GFLAGS=OFF -D WITH_GTEST=OFF -D WITH_UNWIND=OFF .)
 set(GLOG_MAKE  cd ${GLOG_ROOT}/src/glog/build && make -j8)
 set(GLOG_INSTALL cd ${GLOG_ROOT}/src/glog/build && make install)
 

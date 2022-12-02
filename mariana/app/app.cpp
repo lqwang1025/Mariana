@@ -10,15 +10,22 @@
  */
 
 #include <iostream>
-#include <core/tensor.h>
+#include <core/allocator.h>
+#include <core/tensor_impl.h>
 #include <core/impl/shape.h>
 
 int main(int argc, char** argv) {
-    mariana::Shape s = {1,3,244,244};
-    std::cout<<"debug:"<<s.stride_at(0)<<std::endl;
-    std::cout<<"debug:"<<s.stride_at(1)<<std::endl;
-    std::cout<<"debug:"<<s.stride_at(2)<<std::endl;
-    std::cout<<"debug:"<<s.stride_at(3)<<std::endl;
+    mariana::allocator_context().fill_junk = true;
+    mariana::allocator_context().report_memory = true;
+    mariana::Allocator* alloc = mariana::get_allocator(mariana::DeviceType::CPU);
+    auto dataptr = alloc->allocate(32*sizeof(float));
+    float* data = static_cast<float*>(dataptr.get());
+    for (int i = 0; i < 32; ++i) {
+        std::cout<<"debug:"<<data[i]<<std::endl;
+    }
+    std::cout<<"debug:"<<dataptr.get()<<" "<<&dataptr<<std::endl;
+    alloc->mdelete(dataptr);
+    std::cout<<"debug:"<<dataptr.get()<<std::endl;
     return 0;
 }
 
