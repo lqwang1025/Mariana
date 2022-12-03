@@ -131,7 +131,7 @@ public:
     constexpr const T& at(size_t Index) const {
         MCHECK(Index<length_)<<"ArrayRef: invalid index Index = "
                              <<Index<<"; Length = "<<length_;
-        return data[Index];
+        return data_[Index];
     }
 
     /// Disallow accidental assignment from a temporary.
