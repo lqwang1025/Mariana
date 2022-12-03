@@ -20,10 +20,9 @@ namespace mariana {
 struct StorageImpl {
     StorageImpl(size_t size_bytes, DataPtr data_ptr, Allocator* allocator) :
         size_bytes_(size_bytes), data_ptr_(std::move(data_ptr)),
-        allocator_(allocator), use_count_(1), own_data_(false) {}
+        allocator_(allocator), own_data_(false) {}
     StorageImpl(size_t size_bytes, Allocator* allocator) :
-        StorageImpl(size_bytes, allocator->allocate(size_bytes),
-                    allocator) {
+        StorageImpl(size_bytes, allocator->allocate(size_bytes), allocator) {
         own_data_ = true;
     }
     StorageImpl& operator=(StorageImpl&& other) = default;
@@ -31,19 +30,8 @@ struct StorageImpl {
     StorageImpl() = delete;
     StorageImpl(StorageImpl&& other) = default;
     StorageImpl(const StorageImpl&) = delete;
-    ~StorageImpl() = default;
-    int use_count() const {
-        return use_count_.load();
-    }
-    bool unique() const {
-        return use_count_.load() == 1;
-    }
-    void ref_inc() {
-        use_count_ += 1;
-    }
-    void ref_dec() {
-        use_count_ -= 1;
-        if (use_count_ == 0 && own_data_ == true) {
+    ~StorageImpl() {
+        if (own_data_ == true) {
             allocator_->mdelete(data_ptr_);
         }
     }
@@ -97,7 +85,6 @@ private:
     size_t size_bytes_;
     DataPtr data_ptr_;
     Allocator* allocator_;
-    std::atomic<size_t> use_count_;
     std::atomic<bool> own_data_;
 };
 
