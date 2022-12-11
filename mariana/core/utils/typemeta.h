@@ -18,6 +18,7 @@ namespace mariana { namespace detail {
 
 struct TypeMetaData {
     TypeMetaData(int32_t idx, size_t is, const std::string& n) : index(idx), itemsize(is), name(n) {}
+    TypeMetaData() : index(-1), itemsize(0), name("nullptr Uninitalized") {}
     ~TypeMetaData() {}
     int32_t index;
     size_t itemsize;
@@ -27,9 +28,9 @@ struct TypeMetaData {
 } // namespace detail
 
 struct TypeMeta final {
-    // static TypeMeta make() {
+    static TypeMeta make() {
         
-    // }
+    }
     static detail::TypeMetaData* datas();
 };
 

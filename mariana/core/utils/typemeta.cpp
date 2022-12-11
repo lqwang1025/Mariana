@@ -26,7 +26,7 @@ namespace mariana {
     _(bool, 8)                           
 
 detail::TypeMetaData* TypeMeta::datas() {
-    static detail::TypeMetaData instances[] = {
+    static detail::TypeMetaData instances[UINT8_MAX+1] = {
 #define SCALAR_TYPE_META(T, idx)                                \
         detail::TypeMetaData(idx, sizeof(T), MAR_STRINGIZE(T)),
         FORALL_SCALAR_TYPES(SCALAR_TYPE_META)
