@@ -22,7 +22,7 @@
 #define MAR_MACRO_EXPAND(args) args
 
 #define MAR_STRINGIZE_IMPL(x) #x
-#define MAR_STRINGIZE(x) C10_STRINGIZE_IMPL(x)
+#define MAR_STRINGIZE(x) MAR_STRINGIZE_IMPL(x)
 
 #if defined(__GNUC__) || defined(__ICL) || defined(__clang__)
 #define MAR_LIKELY(expr) (__builtin_expect(static_cast<bool>(expr), 1))

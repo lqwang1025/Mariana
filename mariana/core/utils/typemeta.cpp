@@ -8,7 +8,7 @@
  * 
  */
 
-#include <stdint.h>
+#include <cstdint>
 #include <core/macros/macros.h>
 #include <core/utils/typemeta.h>
 
@@ -25,13 +25,14 @@ namespace mariana {
     _(double, 7)                                \
     _(bool, 8)                           
 
-detail::TypeMetaData* typeMetaDatas() {
-    static detail::TypeMetaData instance[MaxTypeIndex+1] = {
-#define SCALAR_TYPE_META(T, idx)                                    \
+detail::TypeMetaData* TypeMeta::datas() {
+    static detail::TypeMetaData instances[] = {
+#define SCALAR_TYPE_META(T, idx)                                \
         detail::TypeMetaData(idx, sizeof(T), MAR_STRINGIZE(T)),
-        FORALL_SCALAR_TYPES(SCALAR_TYPE_META);
-#undef SCALAR_TYPE_META
+        FORALL_SCALAR_TYPES(SCALAR_TYPE_META)
     };
-}
+#undef SCALAR_TYPE_META
+    return instances;
+};
 
 } // namespace mariana

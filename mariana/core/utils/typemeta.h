@@ -14,26 +14,23 @@
 #include <string>
 #define MaxTypeIndex UINT8_MAX
 
-namespace detail {
+namespace mariana { namespace detail {
 
 struct TypeMetaData {
-    TypeMetaData(int32_t idx, size_t is, std::string n) : index(idx), itemsize(is), name(n) {}
+    TypeMetaData(int32_t idx, size_t is, const std::string& n) : index(idx), itemsize(is), name(n) {}
     ~TypeMetaData() {}
     int32_t index;
     size_t itemsize;
     std::string name;
 };
 
-} // namespace detial
-
-namespace mariana {
-
-static detail::TypeMetaData* typeMetaDatas();
+} // namespace detail
 
 struct TypeMeta final {
-    static TypeMeta make() {
+    // static TypeMeta make() {
         
-    }
+    // }
+    static detail::TypeMetaData* datas();
 };
 
 } // namespace mariana
