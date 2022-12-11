@@ -12,12 +12,19 @@
 #ifndef __CORE_TENSOR_IMPL_H__
 #define __CORE_TENSOR_IMPL_H__
 
+#include <core/storage.h>
+#include <core/utils/typemeta.h>
+
 namespace mariana {
 
 class TensorImp {
 public:
-    TensorImp();
+    TensorImp(Storage&& storge, const TypeMeta data_type);
     ~TensorImp();
+private:
+    TypeMeta data_type_;
+    Storage storage_;
+    int64_t nnumel_;
 };
 
 } // namespace mariana
