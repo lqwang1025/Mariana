@@ -18,6 +18,7 @@
 namespace mariana {
 
 enum class DeviceType : int8_t {
+    UNINIT=0,
     CPU=0,
     CUDA=1,
     FPGA=2,

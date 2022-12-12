@@ -18,6 +18,7 @@
 namespace mariana {
 
 struct Device final {
+    Device() : type_(DeviceType::UNINIT) {}
     Device(DeviceType type) : type_(type) {}
     bool operator==(const Device& other) const {
         return type_ == other.type_;

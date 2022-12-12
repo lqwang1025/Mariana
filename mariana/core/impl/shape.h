@@ -20,9 +20,6 @@ constexpr size_t MAX_DIMS = 8;
 
 class Shape final {
 public:
-    using iterator = const int64_t*;
-    using const_iterator = const int64_t*;
-    using reverse_iterator = std::reverse_iterator<iterator>;
     Shape() : dims_(0), size_(0) {
         memset(shape_, 0, sizeof(int64_t)*MAX_DIMS);
     }
@@ -75,11 +72,6 @@ public:
         return make_arrayref(shape_, dims_)==make_arrayref(rhs.shape_, rhs.dims_);
     }
     int64_t operator[](uint8_t idx) const {
-        MCHECK(idx<dims_)<<"Shape out of range: idx:"<<(int)idx
-                         <<" dims_:"<<dims_;
-        return shape_[idx];
-    }
-    int64_t& operator[](uint8_t idx) {
         MCHECK(idx<dims_)<<"Shape out of range: idx:"<<(int)idx
                          <<" dims_:"<<dims_;
         return shape_[idx];
