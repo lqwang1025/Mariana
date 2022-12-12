@@ -88,7 +88,7 @@ public:
         return device_;
     }
     bool storage_initialized() const {
-        return storage_.data();
+        return storage_.initialized();
     }
     bool dtype_initialized() const noexcept {
         return data_type_ != TypeMeta();
