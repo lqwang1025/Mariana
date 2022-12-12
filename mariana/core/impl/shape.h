@@ -93,6 +93,8 @@ private:
     int64_t size_;
 };
 
+std::ostream& operator<<(std::ostream& out, const Shape& shape);
+
 bool operator==(const Shape& a, const Shape& b);
 
 bool operator==(const Shape& a, IntArrayRef b);

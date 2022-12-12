@@ -68,4 +68,9 @@ bool operator!=(const Stride& a, ArrayRef<int32_t> b) {
     return !a.equals(Stride(IntArrayRef{data, b.size()}));
 }
 
+std::ostream& operator<<(std::ostream& out, const Stride& stride) {
+    out<<stride.data();
+    return out;
+}
+
 } // namespace mariana

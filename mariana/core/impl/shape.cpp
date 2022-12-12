@@ -71,4 +71,9 @@ bool operator!=(const Shape& a, ArrayRef<int32_t> b) {
     return !a.equals(Shape(IntArrayRef{data, b.size()}));
 }
 
+std::ostream& operator<<(std::ostream& out, const Shape& shape) {
+    out<<shape.data();
+    return out;
+}
+
 } // namespace mariana

@@ -14,7 +14,8 @@
  
 int main() {
     mariana::TensorImpl t;
-    std::cout<<"debug:"<<t.device()<<std::endl;
+    t.set_shape({1,3,224, 224});
+    std::cout<<"debug:"<<t.shape()<<" "<<t.stride()<<std::endl;
     float* s = t.mutable_data<float>();
     return 0;
 }

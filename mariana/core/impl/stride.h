@@ -75,6 +75,8 @@ private:
     uint8_t dims_;
 };
 
+std::ostream& operator<<(std::ostream& out, const Stride& stride);
+
 bool operator==(const Stride& a, const Stride& b);
 
 bool operator==(const Stride& a, IntArrayRef b);
