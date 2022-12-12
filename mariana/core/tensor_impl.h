@@ -131,7 +131,15 @@ public:
             Allocator* alloc = get_allocator(device_.type());
             auto byte_size = numel()*data_type_.itemsize();
             storage_ = Storage{byte_size, alloc};
+            return storage_.data();
         }
+    }
+    template <typename T>
+    inline T* mutable_data() {
+        if (storage_initialized() && data_type_.match<T>()) {
+            return static_cast<T*>(storage_.data()) + storage_offset_;
+        }
+        return static_cast<T*>(raw_mutable_data(TypeMeta::make<T>()));
     }
 private:
     Shape shape_;
