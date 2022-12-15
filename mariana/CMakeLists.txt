@@ -44,6 +44,7 @@ include(cmake/protobuf.cmake)
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_BINARY_DIR}/generated)
 add_subdirectory(core)
+add_subdirectory(structure)
 add_subdirectory(app)
 
 # add_library(${CMAKE_PROJECT_NAME}-static STATIC)
