@@ -12,5 +12,30 @@
 #ifndef __STRUCTURE_EDGE_H__
 #define __STRUCTURE_EDGE_H__
 
+#include <cstdint>
+#include <memory>
+
+namespace mariana {
+
+struct Node;
+
+struct Edge {
+    Edge() : function(nullptr), input_nr(0) {}
+    
+    bool is_valid() const {
+        return function != nullptr;
+    }
+    bool operator==(const Edge& other) const {
+        return this->function == other.function && this->input_nr == other.input_nr;
+    }
+    bool operator!=(const Edge& other) const {
+        return !(*this == other);
+    }
+    std::shared_ptr<Node> function;
+    uint32_t input_nr;
+};
+
+} // namespace mariana
+
 #endif /* __STRUCTURE_EDGE_H__ */
 
