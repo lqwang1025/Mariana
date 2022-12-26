@@ -16,6 +16,10 @@
 *.dylib
 *.dll
 
+#dir
+build
+3rd_party
+
 # Fortran module files
 *.mod
 *.smod
@@ -30,3 +34,7 @@
 *.exe
 *.out
 *.app
+
+#protobuf
+*.pb.h
+*.pb.cc

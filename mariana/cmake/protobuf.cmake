@@ -18,6 +18,7 @@ ExternalProject_Add(protobuf
 
 set(PROTOBUF_LIB_DIR ${PROTOBUF_ROOT}/lib)
 set(PROTOBUF_INCLUDE_DIR ${PROTOBUF_ROOT}/include)
+set(PROTOBUF_BIN_DIR ${PROTOBUF_ROOT}/bin)
 
 link_directories(${PROTOBUF_LIB_DIR})
 include_directories(${PROTOBUF_INCLUDE_DIR})
