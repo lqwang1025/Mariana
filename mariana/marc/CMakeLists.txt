@@ -10,6 +10,6 @@ target_sources(${LIB_NAME} PRIVATE ${CURRENT_SOURCE_PATH} ${MARIANA_MARC_OBJECTS
 add_dependencies(${LIB_NAME} abseil-cpp glog protobuf)
 target_link_libraries(${LIB_NAME} -lglog -labsl -lpthread)
 
-target_sources(${LIB_NAME}-static PRIVATE ${CURRENT_SOURCE_PATH} ${MARIANA_CORE_OBJECTS} PUBLIC ${CURRENT_HEAD_PATH})
+target_sources(${LIB_NAME}-static PRIVATE ${CURRENT_SOURCE_PATH} ${MARIANA_MARC_OBJECTS} PUBLIC ${CURRENT_HEAD_PATH})
 add_dependencies(${LIB_NAME}-static abseil-cpp glog protobuf)
-target_link_libraries(${LIB_NAME}-static -lglog -labsl -lpthread)
+target_link_libraries(${LIB_NAME}-static -lglog -labsl -lpthread -lprotobuf)
