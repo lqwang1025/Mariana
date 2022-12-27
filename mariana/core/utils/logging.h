@@ -46,7 +46,10 @@ namespace mariana {
     };
 
 }
-
+using google::WARNING;
+using google::ERROR;
+using google::FATAL;
+using google::INFO;
 #define MLOG(severity)                          \
     LOG(severity)
 

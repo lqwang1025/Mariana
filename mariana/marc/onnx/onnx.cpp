@@ -10,7 +10,9 @@
  */
 
 #include <fstream>
+
 #include <marc/onnx/onnx.h>
+#include <marc/onnx/register.h>
 #include <core/utils/logging.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -39,6 +41,8 @@ void OnnxScope::_init() {
     model_info.domain = onnx_model.domain();
     model_info.model_version = onnx_model.model_version();
     model_info.doc_string = onnx_model.doc_string();
+    
+    // graph info initilized
     for (auto it : onnx_model.graph().node()) {
         graph_info.node_name_map.insert({it.name(), &it});
     }
@@ -46,6 +50,7 @@ void OnnxScope::_init() {
     for (auto it : onnx_model.graph().initializer()) {
         graph_info.tensor_name_map.insert({it.name(), &it});
     }
+    graph_info.graph = onnx_model.mutable_graph();
     std::cout<<"size:"<<graph_info.tensor_name_map.size()<<std::endl;
 }
 
@@ -56,7 +61,13 @@ OnnxScope::OnnxScope(const std::string& name) {
 }
 
 bool parse(const std::string& name) {
+    register_converter();
     OnnxScope onnx_scope(name);
+    for (const ::onnx::NodeProto& node : onnx_scope.graph_info.graph->node()) {
+        OnnxConverter* convert = OnnxHolder::search(node.op_type());
+        convert->run(node, onnx_scope);
+    }
+    unregister_converter();
 }
 
 }} // namespace mariana::onnx
