@@ -14,7 +14,7 @@
 
 namespace mariana {
 
-bool parse(const std::string& name) {
+Graph* parse(const std::string& name) {
     return onnx::parse(name);
 }
 

@@ -102,7 +102,7 @@ private:
 
 };
 
-bool parse(const std::string& name);
+Graph* parse(const std::string& name);
 
 #define DECLARE_ONNX_CONVERTER_CLASS(classname)                         \
     class classname final : public OnnxConverter {                      \

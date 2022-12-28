@@ -16,7 +16,9 @@
 
 namespace mariana {
 
-bool parse(const std::string& name);
+class Graph;
+
+Graph* parse(const std::string& name);
 
 } // namespace mariana
 

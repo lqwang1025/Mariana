@@ -11,6 +11,7 @@
 
 #include <fstream>
 
+#include <structure/ir.h>
 #include <marc/onnx/onnx.h>
 #include <marc/onnx/register.h>
 #include <core/utils/logging.h>
@@ -60,14 +61,17 @@ OnnxScope::OnnxScope(const std::string& name) {
     _init();
 }
 
-bool parse(const std::string& name) {
+Graph* parse(const std::string& name) {
     register_converter();
     OnnxScope onnx_scope(name);
+    Graph* graph = new Graph{};
     for (const ::onnx::NodeProto& node : onnx_scope.graph_info.graph->node()) {
         OnnxConverter* convert = OnnxHolder::search(node.op_type());
-        convert->run(node, onnx_scope);
+        Node& dst = graph->add_node(node.name(), node.op_type());
+        convert->run(node, dst, onnx_scope);
     }
     unregister_converter();
+    return graph;
 }
 
 }} // namespace mariana::onnx

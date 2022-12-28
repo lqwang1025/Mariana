@@ -35,7 +35,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_HEADER_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -g -O3 -std=c++11 -lrt -pthread -mavx -ldl -ffast-math")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -g -O3 -std=c++11 -lrt -mavx -ldl -ffast-math")
 
 include(cmake/abseil.cmake)
 include(cmake/glog.cmake)
@@ -43,19 +43,24 @@ include(cmake/protobuf.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_BINARY_DIR}/generated)
-add_subdirectory(core)
-add_subdirectory(structure)
-add_subdirectory(marc)
+
+include(${CMAKE_CURRENT_LIST_DIR}/core/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/structure/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/marc/CMakeLists.txt)
+list(APPEND MARIANA_SRC ${MARIANA_CORE_OBJECTS} ${MARIANA_MARC_OBJECTS} ${MARIANA_STRUCTURE_OBJECTS})
+
+add_library(${CMAKE_PROJECT_NAME}-static STATIC)
+add_library(${CMAKE_PROJECT_NAME} SHARED)
+target_sources(${CMAKE_PROJECT_NAME}-static PUBLIC ${MARIANA_SRC})
+target_sources(${CMAKE_PROJECT_NAME} PUBLIC ${MARIANA_SRC})
+
+target_link_libraries(${CMAKE_PROJECT_NAME}-static PUBLIC -lglog -labsl -lpthread -lprotobuf)
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC -lglog -labsl -lpthread -lprotobuf)
+
+set_target_properties(${CMAKE_PROJECT_NAME}-static PROPERTIES VERSION ${MARIANA_TARGET_VERSION} SOVERSION ${MARIANA_TARGET_SOVERSION})
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES VERSION ${MARIANA_TARGET_VERSION} SOVERSION ${MARIANA_TARGET_SOVERSION})
+
+set_target_properties(${CMAKE_PROJECT_NAME}-static PROPERTIES OUTPUT_NAME "mariana-static")
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME "mariana")
+
 add_subdirectory(app)
-
-# add_library(${CMAKE_PROJECT_NAME}-static STATIC)
-# add_library(${CMAKE_PROJECT_NAME} SHARED)
-# target_link_libraries(${CMAKE_PROJECT_NAME}-static PRIVATE mariana_core)
-# target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE mariana_core)
-
-# set_target_properties(${CMAKE_PROJECT_NAME}-static PROPERTIES VERSION ${MARIANA_TARGET_VERSION} SOVERSION ${MARIANA_TARGET_SOVERSION})
-# set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES VERSION ${MARIANA_TARGET_VERSION} SOVERSION ${MARIANA_TARGET_SOVERSION})
-
-
-# set_target_properties(${CMAKE_PROJECT_NAME}-static PROPERTIES OUTPUT_NAME "mariana")
-# set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME "mariana")

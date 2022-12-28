@@ -12,101 +12,145 @@
 #ifndef __STRUCTURE_IR_H__
 #define __STRUCTURE_IR_H__
 
+#include <set>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <functional>
 
 #include <core/utils/arrary_ref.h>
+#include <core/macros/macros.h>
 #include <core/impl/shape.h>
 
 namespace mariana {
 
-struct Function;
-using FuncPtr = std::shared_ptr<Function>;
-
-struct OpKind {
-    OpKind()=default;
-    explicit OpKind(const std::string& op): op(op) {}
-    bool operator==(const OpKind& rhs) const {
-        return op == rhs.op;
-    }
-    bool operator!=(const OpKind& rhs) const {
-        return !operator==(rhs);
-    }
-    static OpKind get(const std::string& name) {
-        return OpKind(name);
-    }
-    std::string op;
-};
-
-inline std::ostream& operator<<(std::ostream& stream, const OpKind& op) {
-    stream << op.op;
-    return stream;
-}
-
-using OpList = ArrayRef<FuncPtr>;
+class Node;
+class Graph;
+using NodePtr = std::shared_ptr<Node>;
+using OpList = ArrayRef<NodePtr>;
+using NodeIndex = size_t;
 
 class Node {
 public:
     static bool enable_dynamic_shape() {
         return true;
     }
-    Node(OpKind op, size_t num_outputs) : op_(op), num_outputs_(num_outputs) {}
-    Node(OpKind op, OpList operands, std::vector<Shape>&& shapes,
-         size_t num_outputs = 1) : Node(op, num_outputs) {
-        shapes_.insert(shapes.end(),
-                       std::make_move_iterator(shapes.begin()),
-                       std::make_move_iterator(shapes.end()));
-        for (auto& operand : operands) {
-            if (!operand) {
-                continue;
+    
+    Node(NodeIndex index, Graph& graph) : index_(index), graph_(&graph) {}
+    
+    NodeIndex index() const noexcept { return index_; }
+    
+    const std::string& name() const noexcept { return name_; }
+    
+    const std::string& op_type() const noexcept { return op_; }
+
+    void init(const std::string& name, const std::string& op) {
+        name_ = name;
+        op_ = op;
+    }
+    
+    class EdgeEnd {
+    public:
+        EdgeEnd(const Node& node, int src_arg_index, int dst_arg_index) noexcept;
+        explicit EdgeEnd(const Node& node) noexcept;
+        const Node& get_node() const noexcept { return *node_; }
+        int get_src_arg_index() const { return src_arg_index_; }
+        int get_dst_arg_index() const { return dst_arg_index_; }
+    private:
+        const Node* node_;
+        const int src_arg_index_;
+        const int dst_arg_index_;
+    };
+
+    struct EdgeEndCompare {
+        bool operator()(const EdgeEnd& lhs, const EdgeEnd& rhs) const {
+            if (lhs.get_node().index() == rhs.get_node().index()) {
+                if (lhs.get_src_arg_index() == rhs.get_src_arg_index()) {
+                    return lhs.get_dst_arg_index() < rhs.get_dst_arg_index();
+                }
+                return lhs.get_src_arg_index() < rhs.get_src_arg_index();
             }
-            add_operand(operand);
+            return lhs.get_node().index() < rhs.get_node().index();
         }
+    };
+    using EdgeSet = std::set<EdgeEnd, EdgeEndCompare>;
+    using EdgeConstIterator = EdgeSet::const_iterator;
+
+    class NodeConstIterator {
+    public:
+        NodeConstIterator(EdgeConstIterator p_iter);
+    
+        bool operator==(const NodeConstIterator& p_other) const;
+        bool operator!=(const NodeConstIterator& p_other) const;
+    
+        void operator++();
+        void operator--();
+    
+        const Node& operator*() const;
+        const Node* operator->() const;
+
+    private:
+        EdgeConstIterator m_iter;
+    };
+
+    class Relationships {
+    public:
+        Relationships() = default;
+        void clear() noexcept {
+            input_edges.clear();
+            output_edges.clear();
+            control_inputs.clear();
+        }
+        /** The edges for Nodes that provide inputs to this Node. */
+        EdgeSet input_edges;
+        /** The edges for Nodes that receive outputs from this Node. */
+        EdgeSet output_edges;
+        /** The Node names of the control inputs to this Node. */
+        std::set<std::string> control_inputs;
+    private:
+        MAR_DISABLE_COPY_AND_ASSIGN(Relationships);
+    };
+    
+    NodeConstIterator input_nodes_begin() const noexcept { return NodeConstIterator(relationships_.input_edges.cbegin()); };
+    
+    NodeConstIterator input_nodes_end() const noexcept { return NodeConstIterator(relationships_.input_edges.cend()); }
+
+    NodeConstIterator output_nodes_begin() const noexcept {
+        return NodeConstIterator(relationships_.output_edges.cbegin());
     }
-    Node(OpKind op, OpList operands, const std::function<Shape()>& shape_fn,
-         size_t num_outputs = 1) : Node(op, operands, std::vector<Shape>{}, num_outputs) {
-        addComputedShape(shape_fn);
-    }
-    Node(OpKind op, OpList operands, size_t num_outputs = 1)
-        : Node(op, operands, std::vector<Shape>{}, num_outputs) {}
-    Node(OpKind op, Shape shape, size_t num_outputs = 1) : Node(op, num_outputs) {
-        shapes_.push_back(std::move(shape));
-    }
-    ~Node()=default;
-    void add_operand(FuncPtr func) {
-        operands_.push_back(func);
-    }
-    const OpKind& op() const {
-        return op_;
-    }
-    size_t num_outputs() const {
-        return num_outputs_;
-    }
-    ArrayRef<Shape> shapes() const {
-        return shapes_;
-    }
-    const Shape& shape(size_t output_index = 0) const {
-        return shapes_.at(output_index);
-    }
-    void addComputedShape(const std::function<Shape()>& shape_fn) {
-        shapes_.push_back(compute_shape(shape_fn));
-    }
-    Shape compute_shape(const std::function<Shape()>& shape_fn) {
-        return shape_fn();
-    }
-    const std::vector<FuncPtr>& operands() const {
-        return operands_;
-    }
-    FuncPtr operand(size_t i) const {
-        return operands_.at(i);
+
+    NodeConstIterator output_nodes_end() const noexcept { return NodeConstIterator(relationships_.output_edges.cend()); }
+
+    EdgeConstIterator input_edges_begin() const noexcept { return relationships_.input_edges.cbegin(); }
+
+    EdgeConstIterator input_edges_end() const noexcept { return relationships_.input_edges.cend(); }
+
+    EdgeConstIterator output_edges_begin() const noexcept { return relationships_.output_edges.cbegin(); }
+
+    EdgeConstIterator output_edges_end() const noexcept { return relationships_.output_edges.cend(); }
+
+    friend class Graph;
+private:
+    NodeIndex index_ = std::numeric_limits<NodeIndex>::max();
+    std::string op_;
+    std::string name_;
+    Relationships relationships_;
+    Graph* graph_;
+};
+
+class Graph {
+public:
+    Graph() {}
+    Node& add_node(const std::string& name, const std::string& op_type);
+    Node* make_node();
+    size_t num_of_nodes(void) const {
+        return num_of_nodes_;
     }
 private:
-    OpKind op_;
-    size_t num_outputs_;
-    std::vector<Shape> shapes_;
-    std::vector<FuncPtr> operands_;
+    std::vector<std::unique_ptr<Node>> nodes_;
+    std::string name_ = "";
+    size_t num_of_nodes_ = 0;
+    
 };
 
 } // namespace mariana
