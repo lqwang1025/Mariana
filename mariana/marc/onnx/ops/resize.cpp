@@ -13,7 +13,7 @@
 
 namespace mariana { namespace onnx {
 
-void ResizeConverter::run(const ::onnx::NodeProto&, const OnnxScope&) {
+void ResizeConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
     
 }
 

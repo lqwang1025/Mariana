@@ -13,7 +13,7 @@
 
 namespace mariana { namespace onnx {
 
-void ReluConverter::run(const ::onnx::NodeProto&, const OnnxScope&) {
+void ReluConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
     
 }
 

@@ -17,7 +17,7 @@
 
 namespace mariana {
 
-struct Node;
+struct Function;
 
 struct Edge {
     Edge() : function(nullptr), input_nr(0) {}
@@ -31,7 +31,7 @@ struct Edge {
     bool operator!=(const Edge& other) const {
         return !(*this == other);
     }
-    std::shared_ptr<Node> function;
+    std::shared_ptr<Function> function;
     uint32_t input_nr;
 };
 

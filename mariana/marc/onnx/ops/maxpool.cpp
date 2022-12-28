@@ -13,7 +13,7 @@
 
 namespace mariana { namespace onnx {
 
-void MaxPoolConverter::run(const ::onnx::NodeProto&, const OnnxScope&) {
+void MaxPoolConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
     
 }
 

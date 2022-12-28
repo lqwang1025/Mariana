@@ -13,7 +13,7 @@
 
 namespace mariana { namespace onnx {
 
-void SigmoidConverter::run(const ::onnx::NodeProto&, const OnnxScope&) {
+void SigmoidConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
     
 }
 

@@ -13,7 +13,7 @@
 
 namespace mariana { namespace onnx {
 
-void ConcatConverter::run(const ::onnx::NodeProto&, const OnnxScope&) {
+void ConcatConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
     
 }
 

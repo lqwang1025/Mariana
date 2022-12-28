@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include <structure/ir.h>
 #include <core/utils/logging.h>
 #include <marc/onnx/proto/onnx.pb.h>
 
@@ -51,7 +52,7 @@ class OnnxConverter {
 public:
     OnnxConverter()=default;
     virtual ~OnnxConverter()=default;
-    virtual void run(const ::onnx::NodeProto&, const OnnxScope&) = 0;
+    virtual void run(const ::onnx::NodeProto&, Node&, const OnnxScope&) = 0;
 };
 
 using OpCategory = std::string;
@@ -108,7 +109,7 @@ bool parse(const std::string& name);
     public:                                                             \
         classname() {}                                                  \
         virtual ~classname()=default;                                   \
-        virtual void run(const ::onnx::NodeProto&, const OnnxScope&) override; \
+        virtual void run(const ::onnx::NodeProto&, Node&, const OnnxScope&) override; \
     }
 
 

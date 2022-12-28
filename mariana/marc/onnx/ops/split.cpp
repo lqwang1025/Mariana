@@ -13,7 +13,7 @@
 
 namespace mariana { namespace onnx {
 
-void SplitConverter::run(const ::onnx::NodeProto&, const OnnxScope&) {
+void SplitConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
     
 }
 
