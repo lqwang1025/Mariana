@@ -12,3 +12,19 @@
 #include <core/tensor_impl.h>
 #include <core/macros/macros.h>
 #include <core/utils/arrary_ref.h>
+
+namespace mariana {
+
+void TensorImpl::reshape(IntArrayRef shape) {
+    
+}
+
+void TensorImpl::share_data(const TensorImpl& src) {
+    
+}
+
+void TensorImpl::ShareExternalPointer(DataPtr&& data_ptr, TypeMeta data_type, size_t size_bytes) {
+    
+}
+
+} // namespace mariana

@@ -47,14 +47,9 @@ void OnnxScope::_init() {
     model_info.domain = onnx_model.domain();
     model_info.model_version = onnx_model.model_version();
     model_info.doc_string = onnx_model.doc_string();
-
-    graph_info = _init_graph_info(onnx_model.graph());
-    nodes_info = _init_nodes_info(onnx_model.graph());
-    ::onnx::GraphProto dst;
-    sort_by_execution_order(onnx_model.graph(), &dst);
-    for (auto it : dst.node()) {
-        std::cout<<"node:"<<it.name()<<std::endl;
-    }
+    
+    graph_info = init_graph_info(onnx_model.graph());
+    nodes_info = init_nodes_info(onnx_model.graph());
 }
 
 OnnxScope::OnnxScope(const std::string& name) {
@@ -90,9 +85,9 @@ static void _sort_by_execution_order(const ::onnx::GraphProto& input_graph,
     _sort_by_execution_order(input_graph, nodes, visited, __nodes_info);
 }
 
-std::unordered_map<std::string, OnnxScope::NodeInfo> OnnxScope::_init_nodes_info(
+std::unordered_map<std::string, OnnxScope::NodeInfo> OnnxScope::init_nodes_info(
     const ::onnx::GraphProto& graph) {
-    GraphInfo _graph_info = _init_graph_info(graph);
+    GraphInfo _graph_info = init_graph_info(graph);
     std::unordered_map<std::string, NodeInfo> _nodes_info;
     for (const ::onnx::NodeProto& node : graph.node()) {
         NodeInfo node_info;
@@ -115,7 +110,7 @@ std::unordered_map<std::string, OnnxScope::NodeInfo> OnnxScope::_init_nodes_info
     return _nodes_info;
 }
 
-OnnxScope::GraphInfo OnnxScope::_init_graph_info(const ::onnx::GraphProto& graph) {
+OnnxScope::GraphInfo OnnxScope::init_graph_info(const ::onnx::GraphProto& graph) {
     GraphInfo _graph_info;
     // graph info initilized
     for (auto& it : graph.node()) {
@@ -133,14 +128,14 @@ Status OnnxScope::sort_by_execution_order(const ::onnx::GraphProto& input_graph,
                                           ::onnx::GraphProto* output_graph) {
     std::vector<const ::onnx::NodeProto*> order_nodes(0);
     std::set<std::string> visited;
-    size_t node_size = input_graph.node_size();
-    std::unordered_map<std::string, NodeInfo> __nodes_info = _init_nodes_info(input_graph);
+    std::unordered_map<std::string, NodeInfo> __nodes_info = init_nodes_info(input_graph);
     _sort_by_execution_order(input_graph, order_nodes, visited, __nodes_info);
     output_graph->CopyFrom(input_graph);
     output_graph->clear_node();
     for (auto it : order_nodes) {
         *output_graph->add_node() = *it;
     }
+    return absl::OkStatus();
 }
 
 Graph* parse(const std::string& name) {

@@ -17,7 +17,7 @@
 #include <vector>
 
 #include <core/utils/status.h>
-#include <marc/onnx/proto/onnx.pb.h>
+#include <marc/onnx/onnx.h>
 
 namespace mariana { namespace onnx { namespace transform {
 
@@ -34,7 +34,7 @@ struct NodeMatch {
 
 class GraphMatcher {
 public:
-    GraphMatcher(const ::onnx::GraphProto& graph);
+    GraphMatcher(OnnxScope& scope);
 
     // Sorts the input nodes into execution order, and then skips any previously
     // matches so that no node appears in more than one match. The NodeDef
@@ -44,10 +44,12 @@ public:
                               std::vector<NodeMatch>* matches);
 
 private:
-    bool _does_optype_match(const NodeProto& node, const OpTypePattern& pattern,
+    bool _does_optype_match(const ::onnx::NodeProto& node, const OpTypePattern& pattern,
                             const std::set<std::string>& previously_matched_nodes,
                             NodeMatch* match);
     ::onnx::GraphProto graph_;
+    OnnxScope& scope_;
+    
 };
 
 }}} // namespace mariana::onnx::transform
