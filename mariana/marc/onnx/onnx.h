@@ -77,12 +77,12 @@ struct OnnxScope {
     GraphInfo graph_info;
     std::unordered_map<std::string, NodeInfo> nodes_info;
     static bool parse(const std::string& name, ::onnx::ModelProto& onnx_model);
-    Status sort_by_execution_order(const ::onnx::GraphProto& input_graph,
-                                   ::onnx::GraphProto* output_graph);
+    static Status sort_by_execution_order(const ::onnx::GraphProto& input_graph,
+                                          ::onnx::GraphProto* output_graph);
 private:
     void _init();
-    std::unordered_map<std::string, OnnxScope::NodeInfo> _init_nodes_info(const ::onnx::GraphProto& graph);
-    OnnxScope::GraphInfo _init_graph_info(const ::onnx::GraphProto& graph);
+    static std::unordered_map<std::string, OnnxScope::NodeInfo> _init_nodes_info(const ::onnx::GraphProto& graph);
+    static OnnxScope::GraphInfo _init_graph_info(const ::onnx::GraphProto& graph);
 };
 
 class OnnxConverter {

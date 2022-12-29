@@ -94,7 +94,7 @@ std::unordered_map<std::string, OnnxScope::NodeInfo> OnnxScope::_init_nodes_info
     const ::onnx::GraphProto& graph) {
     GraphInfo _graph_info = _init_graph_info(graph);
     std::unordered_map<std::string, NodeInfo> _nodes_info;
-    for (const ::onnx::NodeProto& node : onnx_model.graph().node()) {
+    for (const ::onnx::NodeProto& node : graph.node()) {
         NodeInfo node_info;
         for (auto& input : node.input()) {
             if (_graph_info.tensor_name_map.count(input) != 0) {// Input of node is tensor.
