@@ -16,8 +16,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <functional>
 
+#include <structure/function.h>
 #include <core/utils/arrary_ref.h>
 #include <core/macros/macros.h>
 #include <core/impl/shape.h>
@@ -36,7 +36,9 @@ public:
         return true;
     }
     
-    Node(NodeIndex index, Graph& graph) : index_(index), graph_(&graph) {}
+    Node(NodeIndex index, Graph& graph) : index_(index), graph_(&graph), func_(nullptr) {}
+    
+    ~Node() { delete func_; }
     
     NodeIndex index() const noexcept { return index_; }
     
@@ -44,9 +46,14 @@ public:
     
     const std::string& op_type() const noexcept { return op_; }
 
+    Function* op() noexcept { return func_; }
+
     void init(const std::string& name, const std::string& op) {
         name_ = name;
         op_ = op;
+        auto func_make = FunctionHolder::search(op);
+        MCHECK(func_make!=nullptr)<<"There is no func in registry:"<<op;
+        func_ = func_make();
     }
     
     class EdgeEnd {
@@ -128,14 +135,15 @@ public:
     EdgeConstIterator output_edges_begin() const noexcept { return relationships_.output_edges.cbegin(); }
 
     EdgeConstIterator output_edges_end() const noexcept { return relationships_.output_edges.cend(); }
-
     friend class Graph;
 private:
     NodeIndex index_ = std::numeric_limits<NodeIndex>::max();
+    Graph* graph_;
+    Function* func_;
     std::string op_;
     std::string name_;
     Relationships relationships_;
-    Graph* graph_;
+    
 };
 
 class Graph {

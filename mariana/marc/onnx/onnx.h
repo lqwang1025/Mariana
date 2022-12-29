@@ -16,8 +16,10 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include <core/impl/type.h>
 #include <structure/ir.h>
 #include <core/utils/logging.h>
+#include <core/utils/status.h>
 #include <marc/onnx/proto/onnx.pb.h>
 
 namespace mariana { namespace onnx {
@@ -32,20 +34,55 @@ struct OnnxScope {
         std::string doc_string = "";
     };
     struct GraphInfo {
+        GraphInfo() {}
+        GraphInfo(const GraphInfo& rhs) {}
+        GraphInfo& operator=(const GraphInfo& rhs) {
+            if (this == &rhs) return *this;
+            name = rhs.name;
+            doc_string = rhs.doc_string;
+            node_name_map = rhs.node_name_map;
+            tensor_name_map = rhs.tensor_name_map;
+            graph = rhs.graph;
+            return *this;
+        }
         std::string name = "";
         std::string doc_string = "";
         std::unordered_map<std::string, ::onnx::NodeProto*> node_name_map;
         std::unordered_map<std::string, ::onnx::TensorProto*> tensor_name_map;
         ::onnx::GraphProto* graph = nullptr;
-        
+    };
+    struct NodeInfo {
+        NodeInfo() {
+            is_input = false;
+            nodes.clear();
+            tensors.clear();
+        }
+        NodeInfo(const NodeInfo& rhs) {
+            this->operator=(rhs);
+        }
+        NodeInfo& operator=(const NodeInfo& rhs) {
+            if (this == &rhs) return *this;
+            is_input = rhs.is_input;
+            nodes = rhs.nodes;
+            tensors = rhs.tensors;
+            return *this;
+        }
+        bool is_input = false;
+        std::vector<::onnx::NodeProto*> nodes;
+        std::vector<::onnx::TensorProto*> tensors;
     };
     explicit OnnxScope(const std::string& name);
     ::onnx::ModelProto onnx_model;
     ModelInfo model_info;
     GraphInfo graph_info;
+    std::unordered_map<std::string, NodeInfo> nodes_info;
     static bool parse(const std::string& name, ::onnx::ModelProto& onnx_model);
+    Status sort_by_execution_order(const ::onnx::GraphProto& input_graph,
+                                   ::onnx::GraphProto* output_graph);
 private:
     void _init();
+    std::unordered_map<std::string, OnnxScope::NodeInfo> _init_nodes_info(const ::onnx::GraphProto& graph);
+    OnnxScope::GraphInfo _init_graph_info(const ::onnx::GraphProto& graph);
 };
 
 class OnnxConverter {
@@ -55,7 +92,6 @@ public:
     virtual void run(const ::onnx::NodeProto&, Node&, const OnnxScope&) = 0;
 };
 
-using OpCategory = std::string;
 class OnnxHolder final {
 public:
     typedef std::unordered_map<OpCategory, OnnxConverter*> OnnxConverterMap;

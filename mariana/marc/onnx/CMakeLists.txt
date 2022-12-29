@@ -6,6 +6,7 @@ foreach(FILE_TMP ${PROTO_FILE_LIST_TMP})
 endforeach()
 
 include(${CMAKE_CURRENT_LIST_DIR}/ops/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/optimize/CMakeLists.txt)
 
 file(GLOB CURRENT_SOURCE_PATH ${CMAKE_CURRENT_LIST_DIR}/*.cpp ${CMAKE_CURRENT_LIST_DIR}/proto/*.cc)
 file(GLOB CURRENT_HEAD_PATH ${CMAKE_CURRENT_LIST_DIR}/*.h ${CMAKE_CURRENT_LIST_DIR}/proto/*.h)

@@ -17,7 +17,7 @@
     classname& operator=(const classname&) = delete
 
 #define MAR_CONCATENATE_IMPL(s1, s2) s1##s2
-#define MAR_CONCATENATE(s1, s2) C10_CONCATENATE_IMPL(s1, s2)
+#define MAR_CONCATENATE(s1, s2) MAR_CONCATENATE_IMPL(s1, s2)
 
 #define MAR_MACRO_EXPAND(args) args
 

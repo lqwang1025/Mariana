@@ -13,7 +13,10 @@
 #define __STRUCTURE_FUNCTION_H__
 
 #include <vector>
-#include <mutex>
+#include <functional>
+#include <unordered_map>
+
+#include <core/impl/type.h>
 #include <structure/edge.h>
 #include <structure/tensor.h>
 
@@ -23,20 +26,54 @@ using tensor_list = std::vector<Tensor>;
 using edge_list = std::vector<Edge>;
 
 struct Function {
-    explicit Function(uint64_t sequence_nr, edge_list&& next_edges = edge_list()) : sequence_nr_(sequence_nr), next_edges_(std::move(next_edges)) {}
-    Function(const Function& other) = delete;
-    Function(Function&& other) = delete;
-    Function& operator=(const Function& other) = delete;
-    Function& operator=(Function&& other) = delete;
+    Function() : next_(nullptr) {}
     virtual ~Function() = default;
+    tensor_list operator()(tensor_list&& inputs) {
+        return compute(std::move(inputs));
+    }
+    void set_next(std::shared_ptr<Function> next) {
+        next_ = next;
+    }
+    virtual tensor_list compute(tensor_list&& inputs)=0;
 protected:
-    uint64_t thread_id_ = 0;
-    mutable bool has_parent_ = false;
-    uint64_t topological_nr_ = 0;
-    const uint64_t sequence_nr_;
-    std::mutex mutex_;
-    edge_list next_edges_;
+    std::shared_ptr<Function> next_;
+};
+
+class FunctionHolder final {
+public:
+    using FuncMake = std::function<Function*()>;
+    typedef std::unordered_map<OpCategory, FuncMake> FuncMap;
+    static FuncMap& get_func_map() {
+        static FuncMap* func_map = new FuncMap;
+        return *func_map;
+    }
     
+    static void add_func(const OpCategory& category, FuncMake func) {
+        FuncMap& func_map = get_func_map();
+        if (func_map.count(category) == 1) {
+            MVLOG(WARNING)<<"FUNC "<<category<<" had been registred.";
+            return;
+        }
+        func_map[category] = func;
+    }
+
+    static FuncMake search(const OpCategory& category) {
+        FuncMap& func_map = get_func_map();
+        if (func_map.size() == 0 || func_map.count(category) == 0) {
+            MVLOG(FATAL)<<"There is no func in registry:"<<category;
+            return nullptr;
+        }
+        return func_map[category];
+    }
+    
+    static void release() {
+        FuncMap& func_map = get_func_map();
+        func_map.clear();
+    }
+private:
+    FunctionHolder()=delete;
+    FunctionHolder(const FunctionHolder&)=delete;
+    FunctionHolder& operator=(const FunctionHolder&)=delete;
 };
 
 } // namespace mariana

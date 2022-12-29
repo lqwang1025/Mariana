@@ -24,19 +24,76 @@ public:
             //TODO:ERROR
         }
     }
+    Tensor(Device device=Device{DeviceType::CPU}) {
+        impl_ = std::make_shared<TensorImpl>(device);
+    }
     Tensor(const Tensor&)=default;
     Tensor(Tensor&&)=default;
-    uint8_t dim() const {
-        return impl_->dim();
+    ~Tensor()=default;
+    void set_shape(IntArrayRef shape, int64_t storage_offset = 0) {
+        impl_->set_shape(shape, storage_offset);
+    }
+    void set_shape_and_stride(IntArrayRef shape, IntArrayRef stride,
+                              int64_t storage_offset = 0 ) {
+        impl_->set_shape_and_stride(shape, stride, storage_offset);
+    }
+    void set_storage_offset(int64_t storage_offset) {
+        impl_->set_storage_offset(storage_offset);
+    }
+
+    Shape shape() const {
+        return impl_->shape();
+    }
+    Stride stride() const {
+        return impl_->stride();
+    }
+    int64_t shape(uint8_t idx) const {
+        return impl_->shape(idx);
+    }
+    int64_t stride(uint8_t idx) const {
+        return impl_->stride(idx);
     }
     int64_t numel() const {
         return impl_->numel();
     }
+    uint8_t dim() const {
+        return impl_->dim();
+    }
     int64_t storage_offset() const {
         return impl_->storage_offset();
     }
+    const Storage& storage() const {
+        return impl_->storage();
+    }
+    Device device() const {
+        return impl_->device();
+    }
+    inline bool is_empty() const {
+        return impl_->is_empty();
+    }
+    template <typename T>
+    inline T* data_ptr_impl() const {
+        return impl_->data_ptr_impl<T>();
+    }
+    inline void* data() const {
+        return impl_->data();
+    }
+    template <typename T>
+    inline T* unsafe_data() const {
+        return impl_->unsafe_data<T>();
+    }
+    const TypeMeta dtype() const {
+        return impl_->dtype();
+    }
+    size_t itemsize() const {
+        return impl_->itemsize();
+    }
+    template <typename T>
+    inline T* mutable_data() {
+        return impl_->mutable_data<T>();
+    }
     
-private:
+public:
     std::shared_ptr<TensorImpl> impl_;
 };
 
