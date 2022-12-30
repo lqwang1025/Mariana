@@ -13,6 +13,7 @@
 #define __MARC_ONNX_OPTIMIZE_TRANSFORM_UTILS_H__
 
 #include <set>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -24,13 +25,23 @@ namespace mariana { namespace onnx { namespace transform {
 struct OpTypePattern {
     std::string op;
     std::vector<OpTypePattern> inputs;
+    std::string debug_string() const;
 };
 
 struct NodeMatch {
     NodeMatch() : node() {}
     ::onnx::NodeProto node;
     std::vector<NodeMatch> inputs;
+    std::string debug_string() const;
 };
+
+Status replace_matching_optypes(const ::onnx::GraphProto& input_graph,
+                                const OpTypePattern& pattern,
+                                const std::function<
+                                Status(const NodeMatch&, const std::set<string>&,
+                                       const std::set<string>&,
+                                       std::vector<NodeDef>*)>& node_generator,
+                                ::onnx::GraphProto* output_graph);
 
 class GraphMatcher {
 public:
@@ -51,6 +62,27 @@ private:
     OnnxScope& scope_;
     
 };
+
+typedef std::function<Status(const ::onnx::GraphProto&,
+                             const OnnxScope& scope_, ::onnx::GraphProto*)> TransformFunc;
+typedef std::map<std::string, TransformFunc> TransformRegistry;
+TransformRegistry* get_transform_registry();
+
+class TransformRegistrar {
+public:
+    TransformRegistrar(const string& name, TransformFunc transform_func) {
+        TransformRegistry* transform_registry = GetTransformRegistry();
+        (*transform_registry)[name] = transform_func;
+    }
+};
+
+#define REGISTER_ONNX_GRAPH_TRANSFORM(name, func)                       \
+    REGISTER_ONNX_GRAPH_TRANSFORM_UNIQ_HELPER(__COUNTER__, name, func)
+#define REGISTER_ONNX_GRAPH_TRANSFORM_UNIQ_HELPER(ctr, name, func)  \
+    REGISTER_ONNX_GRAPH_TRANSFORM_UNIQ(ctr, name, func)
+#define REGISTER_ONNX_GRAPH_TRANSFORM_UNIQ(ctr, name, func) \
+    static mariana::onnx::transform::TransformRegistrar     \
+    registrar__body__##ctr##__object(name, func);
 
 }}} // namespace mariana::onnx::transform
 

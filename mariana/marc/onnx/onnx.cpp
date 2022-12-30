@@ -20,6 +20,7 @@
 #include <marc/onnx/register.h>
 
 #include <core/utils/logging.h>
+#include <marc/onnx/optimize/transform_utils.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
@@ -92,18 +93,25 @@ std::unordered_map<std::string, OnnxScope::NodeInfo> OnnxScope::init_nodes_info(
     for (const ::onnx::NodeProto& node : graph.node()) {
         NodeInfo node_info;
         for (auto& input : node.input()) {
+            std::string input_name;
             if (_graph_info.tensor_name_map.count(input) != 0) {// Input of node is tensor.
                 node_info.tensors.push_back(_graph_info.tensor_name_map[input]);
+                input_name = input;
             } else { // Input of node is node.
+                bool finded = false;
                 for (const ::onnx::NodeProto& _node : graph.node()) {
+                    if (finded) break;
                     for (auto& _output : _node.output()) {
                         if (input == _output) {
                             node_info.nodes.push_back(const_cast<::onnx::NodeProto*>(&_node));
+                            input_name = _node.name();
+                            finded = true;
                             break;
                         }
                     }
                 }
             }
+            node_info.inputs.push_back(input_name);
         }
         _nodes_info.emplace(node.name(), node_info);
     }
@@ -142,6 +150,27 @@ Graph* parse(const std::string& name) {
     register_converter();
     OnnxScope onnx_scope(name);
     Graph* graph = new Graph{};
+    transform::GraphMatcher gm{onnx_scope};
+    transform::OpTypePattern pattern = {"Conv",
+                                        {
+                                            {"MaxPool",
+                                             {
+                                                 // {"*"}
+                                             }
+                                            },
+                                            {"Identity",
+                                             // {
+                                                 
+                                             // }
+                                            }
+                                        }
+    };
+    std::vector<transform::NodeMatch> matches;
+    gm.get_optype_matches(pattern, &matches);
+    for (auto it : matches) {
+        std::cout<<"debug:"<<it.debug_string()<<std::endl;
+    }
+    
     // register_funcs();
     // for (const ::onnx::NodeProto& node : onnx_scope.graph_info.graph->node()) {
     //     if (1 == CONTINUE_OP.count(node.op_type())) continue;

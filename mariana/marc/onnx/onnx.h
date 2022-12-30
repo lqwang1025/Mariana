@@ -54,6 +54,7 @@ struct OnnxScope {
     struct NodeInfo {
         NodeInfo() {
             is_input = false;
+            inputs.clear();
             nodes.clear();
             tensors.clear();
         }
@@ -62,12 +63,14 @@ struct OnnxScope {
         }
         NodeInfo& operator=(const NodeInfo& rhs) {
             if (this == &rhs) return *this;
+            inputs = rhs.inputs;
             is_input = rhs.is_input;
             nodes = rhs.nodes;
             tensors = rhs.tensors;
             return *this;
         }
         bool is_input = false;
+        std::vector<std::string> inputs;
         std::vector<::onnx::NodeProto*> nodes;
         std::vector<::onnx::TensorProto*> tensors;
     };
