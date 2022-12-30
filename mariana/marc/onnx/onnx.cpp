@@ -153,16 +153,8 @@ Graph* parse(const std::string& name) {
     transform::GraphMatcher gm{onnx_scope};
     transform::OpTypePattern pattern = {"Conv",
                                         {
-                                            {"MaxPool",
-                                             {
-                                                 // {"*"}
-                                             }
-                                            },
-                                            {"Identity",
-                                             // {
-                                                 
-                                             // }
-                                            }
+                                            {"*"},
+                                            {"Identity"}
                                         }
     };
     std::vector<transform::NodeMatch> matches;

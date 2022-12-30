@@ -37,10 +37,7 @@ struct NodeMatch {
 
 Status replace_matching_optypes(const ::onnx::GraphProto& input_graph,
                                 const OpTypePattern& pattern,
-                                const std::function<
-                                Status(const NodeMatch&, const std::set<string>&,
-                                       const std::set<string>&,
-                                       std::vector<NodeDef>*)>& node_generator,
+                                const std::function<Status(const NodeMatch&, std::vector<::onnx::NodeProto>*)>& node_generator,
                                 ::onnx::GraphProto* output_graph);
 
 class GraphMatcher {
@@ -70,8 +67,8 @@ TransformRegistry* get_transform_registry();
 
 class TransformRegistrar {
 public:
-    TransformRegistrar(const string& name, TransformFunc transform_func) {
-        TransformRegistry* transform_registry = GetTransformRegistry();
+    TransformRegistrar(const std::string& name, TransformFunc transform_func) {
+        TransformRegistry* transform_registry = get_transform_registry();
         (*transform_registry)[name] = transform_func;
     }
 };

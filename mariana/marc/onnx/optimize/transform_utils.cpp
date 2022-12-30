@@ -133,13 +133,13 @@ Status replace_matching_optypes(const ::onnx::GraphProto& input_graph,
                                 Status(const NodeMatch&,
                                        std::vector<::onnx::NodeProto>*)>& node_generator,
                                 ::onnx::GraphProto* output_graph) {
-    GraphMatcher matcher(input_graph_def);
-    std::vector<NodeMatch> matches;
-    Status res = matcher.get_optype_matches(pattern, &matches);
-    if (!res.ok()) {
-        MLOG(ERROR) << "get_optype_matches error";
-        return res;
-    }
+    // GraphMatcher matcher(input_graph_def);
+    // std::vector<NodeMatch> matches;
+    // Status res = matcher.get_optype_matches(pattern, &matches);
+    // if (!res.ok()) {
+    //     MLOG(ERROR) << "get_optype_matches error";
+    //     return res;
+    // }
 }
 
 }}} // namespace mariana::onnx::transform
