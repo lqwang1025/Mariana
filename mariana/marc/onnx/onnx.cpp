@@ -150,18 +150,8 @@ Graph* parse(const std::string& name) {
     register_converter();
     OnnxScope onnx_scope(name);
     Graph* graph = new Graph{};
-    transform::GraphMatcher gm{onnx_scope};
-    transform::OpTypePattern pattern = {"Conv",
-                                        {
-                                            {"*"},
-                                            {"Identity"}
-                                        }
-    };
-    std::vector<transform::NodeMatch> matches;
-    gm.get_optype_matches(pattern, &matches);
-    for (auto it : matches) {
-        std::cout<<"debug:"<<it.debug_string()<<std::endl;
-    }
+    transform::TransformRegistry* reg = transform::get_transform_registry();
+    (*reg)["fold_identity_to_conv"](onnx_scope);
     
     // register_funcs();
     // for (const ::onnx::NodeProto& node : onnx_scope.graph_info.graph->node()) {

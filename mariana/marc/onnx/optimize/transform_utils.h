@@ -35,10 +35,10 @@ struct NodeMatch {
     std::string debug_string() const;
 };
 
-Status replace_matching_optypes(const ::onnx::GraphProto& input_graph,
+Status replace_matching_optypes(OnnxScope& scope,
                                 const OpTypePattern& pattern,
                                 const std::function<Status(const NodeMatch&, std::vector<::onnx::NodeProto>*)>& node_generator,
-                                ::onnx::GraphProto* output_graph);
+                                ::onnx::GraphProto* graph);
 
 class GraphMatcher {
 public:
@@ -60,8 +60,7 @@ private:
     
 };
 
-typedef std::function<Status(const ::onnx::GraphProto&,
-                             const OnnxScope& scope_, ::onnx::GraphProto*)> TransformFunc;
+typedef std::function<Status(OnnxScope& scope)> TransformFunc;
 typedef std::map<std::string, TransformFunc> TransformRegistry;
 TransformRegistry* get_transform_registry();
 

@@ -86,7 +86,8 @@ bool GraphMatcher::_does_optype_match(const ::onnx::NodeProto& node,
           }
       }
       if (!pattern_matched) {
-          MVLOG(1) << "node.op() != pattern.op()";
+          MVLOG(1) << "node.op() != pattern.op"
+                   << node.op_type()<<" "<<pattern.op;
           return false;
       }
       match->node = node;
@@ -127,19 +128,25 @@ TransformRegistry* get_transform_registry() {
     return &transform_registry;
 }
 
-Status replace_matching_optypes(const ::onnx::GraphProto& input_graph,
+Status replace_matching_optypes(OnnxScope& scope,
                                 const OpTypePattern& pattern,
                                 const std::function<
                                 Status(const NodeMatch&,
                                        std::vector<::onnx::NodeProto>*)>& node_generator,
-                                ::onnx::GraphProto* output_graph) {
-    // GraphMatcher matcher(input_graph_def);
-    // std::vector<NodeMatch> matches;
-    // Status res = matcher.get_optype_matches(pattern, &matches);
-    // if (!res.ok()) {
-    //     MLOG(ERROR) << "get_optype_matches error";
-    //     return res;
-    // }
+                                ::onnx::GraphProto* graph) {
+    GraphMatcher matcher{scope};
+    std::vector<NodeMatch> matches;
+    Status res = matcher.get_optype_matches(pattern, &matches);
+    if (!res.ok()) {
+        MLOG(ERROR) << "get_optype_matches error";
+        return res;
+    }
+    for (auto it :  matches) {
+        std::cout<<"dd:"<<it.debug_string()<<std::endl;
+    }
+    std::vector<::onnx::NodeProto> new_nodes;
+    // Status status = node_generator(matches, &new_nodes);
+    // return status;
 }
 
 }}} // namespace mariana::onnx::transform
