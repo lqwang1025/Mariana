@@ -37,7 +37,7 @@ struct NodeMatch {
 
 Status replace_matching_optypes(OnnxScope& scope,
                                 const OpTypePattern& pattern,
-                                const std::function<Status(const NodeMatch&, std::vector<::onnx::NodeProto>*)>& node_generator,
+                                const std::function<Status(OnnxScope& scope, const NodeMatch&, std::vector<::onnx::NodeProto>*, std::vector<::onnx::TensorProto>*)>& node_generator,
                                 ::onnx::GraphProto* graph);
 
 class GraphMatcher {

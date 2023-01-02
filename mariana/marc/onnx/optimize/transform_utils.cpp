@@ -131,8 +131,9 @@ TransformRegistry* get_transform_registry() {
 Status replace_matching_optypes(OnnxScope& scope,
                                 const OpTypePattern& pattern,
                                 const std::function<
-                                Status(const NodeMatch&,
-                                       std::vector<::onnx::NodeProto>*)>& node_generator,
+                                Status(OnnxScope& scope, const NodeMatch&,
+                                       std::vector<::onnx::NodeProto>*,
+                                       std::vector<::onnx::TensorProto>*)>& node_generator,
                                 ::onnx::GraphProto* graph) {
     GraphMatcher matcher{scope};
     std::vector<NodeMatch> matches;
@@ -141,12 +142,14 @@ Status replace_matching_optypes(OnnxScope& scope,
         MLOG(ERROR) << "get_optype_matches error";
         return res;
     }
-    for (auto it :  matches) {
-        std::cout<<"dd:"<<it.debug_string()<<std::endl;
+    Status status;
+    for (const NodeMatch& match : matches) {
+        std::vector<::onnx::NodeProto> new_nodes;
+        std::vector<::onnx::TensorProto> new_tensors;
+        status = node_generator(scope, match, &new_nodes, &new_tensors);
+        
     }
-    std::vector<::onnx::NodeProto> new_nodes;
-    // Status status = node_generator(matches, &new_nodes);
-    // return status;
+    return status;
 }
 
 }}} // namespace mariana::onnx::transform
