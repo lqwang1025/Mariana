@@ -92,6 +92,10 @@ public:
     inline T* mutable_data() {
         return impl_->mutable_data<T>();
     }
+    inline size_t use_count() const {
+        return impl_.use_count();
+    }
+  
     
 public:
     std::shared_ptr<TensorImpl> impl_;

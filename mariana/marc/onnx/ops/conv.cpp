@@ -24,23 +24,33 @@ void ConvConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope
     GET_ONNX_NODE_ATTR(src, "strides", &func->option.strides);
     GET_ONNX_NODE_ATTR(src, "pads", &func->option.pads);
     
-    func->option.weights.reserve(src.input_size()-1);
+    func->option.weights.reserve(scope.nodes_info.at(src.name()).tensors.size());
     
-    // for (int i = 1; i < src.input_size(); ++i) {
-    //     std::cout<<"dd:"<<scope.graph_info.node_name_map.count(src.input(i))
-    //              <<" "<<src.input(i)<<std::endl;
-    //     std::cout<<"dd:"<<scope.graph_info.tensor_name_map.count(src.input(i))
-    //              <<" "<<src.input(i)<<std::endl;
-        // Tensor t;
-        // t.set_shape(IntArrayRef shape, int64_t storage_offset = 0);
-        // func->option.weights.push_back();
-    // }
-    for (auto it : scope.nodes_info.at(src.name()).nodes) {
-        std::cout<<"input node:"<<it->name()<<std::endl;
-    }
-    std::cout<<"debug:"<<src.name()<<" "<<scope.nodes_info.at(src.name()).tensors.size()<<std::endl;
-    for (auto it : scope.nodes_info.at(src.name()).tensors) {
-        std::cout<<"input t:"<<it->name()<<std::endl;
+    for (int i = 1; i < src.input_size(); ++i) {
+        std::cout<<"dd:"<<scope.graph_info.tensor_name_map.count(src.input(i))
+                 <<" "<<src.input(i)<<std::endl;
+        const ::onnx::TensorProto* weight = scope.graph_info.tensor_name_map.at(src.input(i));
+        std::vector<int64_t> shape;
+        void* content;
+        get_content_from_tensor(*weight, shape, &content);
+        ArrayRef<int64_t> arr(shape);
+        std::cout<<"debug:"<<arr<<std::endl;
+        Tensor t;
+        t.set_shape(shape);
+        ::onnx::TensorProto_DataType data_type = static_cast<::onnx::TensorProto_DataType>(weight->data_type());
+        
+        switch (data_type) {
+        case ::onnx::TensorProto_DataType::TensorProto_DataType_FLOAT :
+            float* data = t.mutable_data<float>();
+            std::cout<<"ss:"<<t.numel()*t.itemsize()<<std::endl;
+            memcpy(data, content, t.numel()*t.itemsize());
+            
+            break;
+        }
+        
+        std::cout<<"use_count "<<t.use_count()<<std::endl;
+        std::cout<<::onnx::TensorProto_DataType_Name(data_type)<<"\n";
+        func->option.weights.push_back(t);
     }
 }
 

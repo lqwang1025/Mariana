@@ -114,7 +114,7 @@ bool get_node_attr(const ::onnx::NodeProto& node, const std::string&& name, ::on
     GET_NODE_ATTR(type, func);
 }
 
-void get_content_from_tensor(const ::onnx::TensorProto& tensor, std::vector<int>& shape, void** content) {
+void get_content_from_tensor(const ::onnx::TensorProto& tensor, std::vector<int64_t>& shape, void** content) {
     shape.clear();
     shape.reserve(tensor.dims_size());
     for (auto dim : tensor.dims()) {

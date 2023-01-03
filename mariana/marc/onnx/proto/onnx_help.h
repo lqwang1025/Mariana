@@ -35,7 +35,7 @@ bool get_node_attr(const ::onnx::NodeProto& node, const std::string&& name, std:
 bool get_node_attr(const ::onnx::NodeProto& node, const std::string&& name, std::vector<int32_t> *value);
 bool get_node_attr(const ::onnx::NodeProto& node, const std::string&& name, ::onnx::TensorProto *value);
 
-void get_content_from_tensor(const ::onnx::TensorProto& tensor, std::vector<int>& shape, void** content);
+void get_content_from_tensor(const ::onnx::TensorProto& tensor, std::vector<int64_t>& shape, void** content);
 
 #define GET_ONNX_NODE_ATTR(__node, _name, value_ptr)                    \
     do {                                                                \
