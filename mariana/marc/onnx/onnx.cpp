@@ -159,9 +159,24 @@ Status OnnxScope::sort_by_execution_order(const ::onnx::GraphProto& input_graph,
 }
 
 void OnnxScope::update(const ::onnx::GraphProto& graph) {
-    *onnx_model.mutable_graph() = graph;
+    sort_by_execution_order(graph, onnx_model.mutable_graph());
     graph_info = init_graph_info(onnx_model.graph());
     nodes_info = init_nodes_info(onnx_model.graph());
+}
+
+static void build_link(Graph* graph, const OnnxScope& scope) {
+    Scope my_scope(graph);
+    for (auto& it : graph->nodes()) {
+        auto& nodes = scope.nodes_info.at(it->name()).nodes;
+        for (size_t i = 0; i < nodes.size(); ++i) { // input
+            Node* i_node = my_scope.node_name_map[nodes[i]->name()].get();
+            Node::EdgeEnd i_edge(i_node, static_cast<int>(i));
+            it->relationships().input_edges.insert(i_edge);
+            
+            Node::EdgeEnd o_edge(it.get(), static_cast<int>(i_node->relationships().output_edges.size()));
+            i_node->relationships().output_edges.insert(o_edge);
+        }
+    }
 }
 
 Graph* parse(const std::string& name) {
@@ -171,14 +186,18 @@ Graph* parse(const std::string& name) {
     // 1. Optimie onnx graph first.
     transform::transform(onnx_scope, {"fold_identity_to_conv"});
     
+    // 2. Convert onnx node to us. The node had been sorted.
     Graph* graph = new Graph{};
     register_funcs();
-    // 2. Convert onnx node to us.
     for (const ::onnx::NodeProto& node : onnx_scope.graph_info.graph->node()) {
         OnnxConverter* convert = OnnxHolder::search(node.op_type());
         Node& dst = graph->add_node(node.name(), node.op_type());
         convert->run(node, dst, onnx_scope);
     }
+
+    // 3. Build link on our graph.
+    build_link(graph, onnx_scope);
+    
     unregister_funcs();
     unregister_converter();
     return graph;

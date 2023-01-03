@@ -21,7 +21,8 @@ void register_converter() {
     ADD_CONVERT(Default, DefaultConverter);
     ADD_CONVERT(Add, AddConverter);
     ADD_CONVERT(Concat, ConcatConverter);
-    ADD_CONVERT(MaxPool, MaxPoolConverter);
+    ADD_CONVERT(MaxPool, PoolConverter);
+    ADD_CONVERT(GlobalAveragePool, PoolConverter);
     ADD_CONVERT(Mul, MulConverter);
     ADD_CONVERT(Pow, PowConverter);
     ADD_CONVERT(Conv, ConvConverter);
@@ -31,6 +32,7 @@ void register_converter() {
     ADD_CONVERT(Split, SplitConverter);
     ADD_CONVERT(Transpose, TransposeConverter);
     ADD_CONVERT(Relu, ReluConverter);
+    ADD_CONVERT(Gemm, GemmConverter);
 }
 #undef ADD_CONVERT
 

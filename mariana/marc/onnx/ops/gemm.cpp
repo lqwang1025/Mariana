@@ -2,30 +2,37 @@
  *        (C) COPYRIGHT LeiNao Limited.
  *             ALL RIGHTS RESERVED
  *
- * File       : conv.cpp
+ * File       : marc/onnx/ops/gemm.cpp
  * Authors    : wangliquan@zkln
- * Create Time: 2022-12-27:16:51:29
+ * Create Time: 2023-01-03:13:58:10
  * Description:
  * 
  */
 
 #include <marc/onnx/register.h>
-#include <structure/funcs/conv.h>
+#include <structure/funcs/gemm.h>
 #include <marc/onnx/proto/onnx_help.h>
-
 namespace mariana { namespace onnx {
 
-void ConvConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope& scope) {
-    ConvFunction* func = static_cast<ConvFunction*>(dst.op());
-    
-    GET_ONNX_NODE_ATTR(src, "dilations", &func->option.dilations);
-    GET_ONNX_NODE_ATTR(src, "group", &func->option.group);
-    GET_ONNX_NODE_ATTR(src, "kernel_shape", &func->option.kernel_shape);
-    GET_ONNX_NODE_ATTR(src, "strides", &func->option.strides);
-    GET_ONNX_NODE_ATTR(src, "pads", &func->option.pads);
-    
+void GemmConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope& scope) {
+    GemmFunction* func = static_cast<GemmFunction*>(dst.op());
+    GET_ONNX_NODE_ATTR(src, "alpha", &func->option.alpha);
+    GET_ONNX_NODE_ATTR(src, "beta", &func->option.beta);
+    int32_t trans = 0;
+    if (node_has_attr(src, "transA")) {
+        GET_ONNX_NODE_ATTR(src, "transA", &trans);
+    }
+    if (trans == 1) {
+        func->option.trans_a = true;
+        trans = 0;
+    }
+    if (node_has_attr(src, "transB")) {
+        GET_ONNX_NODE_ATTR(src, "transB", &trans);
+    }
+    if (trans == 1) {
+        func->option.trans_b = true;
+    }
     func->option.weights.reserve(scope.nodes_info.at(src.name()).tensors.size());
-    
     for (int i = 1; i < src.input_size(); ++i) {
         const ::onnx::TensorProto* weight = scope.graph_info.tensor_name_map.at(src.input(i));
         std::vector<int64_t> shape;

@@ -35,7 +35,7 @@ Status fold_identity_to_conv(OnnxScope& scope) {
     bool job;
     do {
         replace_matching_optypes(scope,
-                                 {"Conv",
+                                 {"Conv|Gemm",
                                      {
                                          {"*"},
                                          {"Identity"}

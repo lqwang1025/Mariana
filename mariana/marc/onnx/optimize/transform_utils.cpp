@@ -28,7 +28,7 @@ std::string OpTypePattern::debug_string() const {
 
 std::string NodeMatch::debug_string() const {
     std::string result = "{";
-    result += node.name();
+    result += node.name() + ":" node.op_type();
     result += ", {";
     for (const NodeMatch& input : inputs) {
         result += input.debug_string() + ",";

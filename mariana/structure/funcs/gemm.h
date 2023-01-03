@@ -15,6 +15,7 @@
 #include <vector>
 #include <cstdint>
 
+#include <structure/tensor.h>
 #include <structure/function.h>
 #include <structure/func_option.h>
 
@@ -23,6 +24,11 @@ namespace mariana {
 struct GemmOption : public BaseOption {
     GemmOption() {}
     ~GemmOption() {}
+    float alpha = 1.f;
+    float beta = 1.f;
+    bool trans_a = false;
+    bool trans_b = false;
+    std::vector<Tensor> weights;
 };
 
 struct GemmFunction : public Function {

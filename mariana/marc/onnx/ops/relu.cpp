@@ -10,11 +10,11 @@
  */
 
 #include <marc/onnx/register.h>
+#include <structure/funcs/relu.h>
 
 namespace mariana { namespace onnx {
 
-void ReluConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
-    
+void ReluConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope& scope) {
 }
 
 }} // namespace mariana::onnx

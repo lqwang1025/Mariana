@@ -23,8 +23,8 @@ namespace mariana {
 enum class PoolType : uint8_t {
     None = 0,
         Max = 1,
-        Ave = 2,
-        GAve = 3
+        Avg = 2,
+        GAvg = 3
         
 };
 
@@ -32,6 +32,10 @@ struct PoolOption : public BaseOption {
     PoolOption() {}
     ~PoolOption() {}
     PoolType type = PoolType::None;
+    int32_t ceil_mode = 0;
+    std::vector<int32_t> kernel_shape;
+    std::vector<int32_t> pads;
+    std::vector<int32_t> strides;
 };
 
 struct PoolFunction : public Function {

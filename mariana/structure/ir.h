@@ -13,6 +13,7 @@
 #define __STRUCTURE_IR_H__
 
 #include <set>
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -58,47 +59,24 @@ public:
     
     class EdgeEnd {
     public:
-        EdgeEnd(const Node& node, int src_arg_index, int dst_arg_index) noexcept;
-        explicit EdgeEnd(const Node& node) noexcept;
+        EdgeEnd(const Node* node, int index) noexcept;
+        explicit EdgeEnd(const Node* node) noexcept;
         const Node& get_node() const noexcept { return *node_; }
-        int get_src_arg_index() const { return src_arg_index_; }
-        int get_dst_arg_index() const { return dst_arg_index_; }
+        int get_index() const { return index_; }
     private:
-        const Node* node_;
-        const int src_arg_index_;
-        const int dst_arg_index_;
+        const Node* node_ = nullptr;
+        const int index_ = INT_MAX;
     };
 
     struct EdgeEndCompare {
         bool operator()(const EdgeEnd& lhs, const EdgeEnd& rhs) const {
             if (lhs.get_node().index() == rhs.get_node().index()) {
-                if (lhs.get_src_arg_index() == rhs.get_src_arg_index()) {
-                    return lhs.get_dst_arg_index() < rhs.get_dst_arg_index();
-                }
-                return lhs.get_src_arg_index() < rhs.get_src_arg_index();
+                return lhs.get_index() < rhs.get_index();
             }
             return lhs.get_node().index() < rhs.get_node().index();
         }
     };
     using EdgeSet = std::set<EdgeEnd, EdgeEndCompare>;
-    using EdgeConstIterator = EdgeSet::const_iterator;
-
-    class NodeConstIterator {
-    public:
-        NodeConstIterator(EdgeConstIterator p_iter);
-    
-        bool operator==(const NodeConstIterator& p_other) const;
-        bool operator!=(const NodeConstIterator& p_other) const;
-    
-        void operator++();
-        void operator--();
-    
-        const Node& operator*() const;
-        const Node* operator->() const;
-
-    private:
-        EdgeConstIterator m_iter;
-    };
 
     class Relationships {
     public:
@@ -117,24 +95,12 @@ public:
     private:
         MAR_DISABLE_COPY_AND_ASSIGN(Relationships);
     };
-    
-    NodeConstIterator input_nodes_begin() const noexcept { return NodeConstIterator(relationships_.input_edges.cbegin()); };
-    
-    NodeConstIterator input_nodes_end() const noexcept { return NodeConstIterator(relationships_.input_edges.cend()); }
-
-    NodeConstIterator output_nodes_begin() const noexcept {
-        return NodeConstIterator(relationships_.output_edges.cbegin());
+    Relationships& relationships() {
+        return relationships_;
     }
-
-    NodeConstIterator output_nodes_end() const noexcept { return NodeConstIterator(relationships_.output_edges.cend()); }
-
-    EdgeConstIterator input_edges_begin() const noexcept { return relationships_.input_edges.cbegin(); }
-
-    EdgeConstIterator input_edges_end() const noexcept { return relationships_.input_edges.cend(); }
-
-    EdgeConstIterator output_edges_begin() const noexcept { return relationships_.output_edges.cbegin(); }
-
-    EdgeConstIterator output_edges_end() const noexcept { return relationships_.output_edges.cend(); }
+    const Relationships& relationships() const {
+        return relationships_;
+    }
     friend class Graph;
 private:
     NodeIndex index_ = std::numeric_limits<NodeIndex>::max();
@@ -154,11 +120,31 @@ public:
     size_t num_of_nodes(void) const {
         return num_of_nodes_;
     }
+    const std::vector<std::shared_ptr<Node>>& nodes() const {
+        return nodes_;
+    }
+    std::vector<std::shared_ptr<Node>>& nodes() {
+        return nodes_;
+    }
+    const std::shared_ptr<Node>& nodes(size_t i) const {
+        return nodes_[i];
+    }
+    std::shared_ptr<Node>& nodes(size_t i) {
+        return nodes_[i];
+    }
 private:
-    std::vector<std::unique_ptr<Node>> nodes_;
+    std::vector<std::shared_ptr<Node>> nodes_;
     std::string name_ = "";
     size_t num_of_nodes_ = 0;
-    
+};
+
+struct Scope {
+    Scope(Graph *graph) {
+        init(graph);
+    }
+    ~Scope() {}
+    void init(Graph *graph);
+    std::unordered_map<std::string, std::shared_ptr<Node>> node_name_map;
 };
 
 } // namespace mariana
