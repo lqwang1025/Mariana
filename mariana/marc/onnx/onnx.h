@@ -45,6 +45,10 @@ struct OnnxScope {
             graph = rhs.graph;
             return *this;
         }
+        void clear() {
+            node_name_map.clear();
+            tensor_name_map.clear();
+        }
         std::string name = "";
         std::string doc_string = "";
         std::unordered_map<std::string, ::onnx::NodeProto*> node_name_map;
@@ -69,6 +73,11 @@ struct OnnxScope {
             tensors = rhs.tensors;
             return *this;
         }
+        void clear() {
+            inputs.clear();
+            nodes.clear();
+            tensors.clear();
+        }
         bool is_input = false;
         std::vector<std::string> inputs;
         std::vector<::onnx::NodeProto*> nodes;
@@ -79,6 +88,8 @@ struct OnnxScope {
     ModelInfo model_info;
     GraphInfo graph_info;
     std::unordered_map<std::string, NodeInfo> nodes_info;
+    void update(const ::onnx::GraphProto& graph);
+    bool save(const std::string& name);
     static bool parse(const std::string& name, ::onnx::ModelProto& onnx_model);
     static Status sort_by_execution_order(const ::onnx::GraphProto& input_graph,
                                           ::onnx::GraphProto* output_graph);

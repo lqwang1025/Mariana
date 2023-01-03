@@ -18,6 +18,7 @@
 #include <marc/onnx/ops.h>
 #include <marc/onnx/onnx.h>
 #include <marc/onnx/register.h>
+#include <marc/onnx/optimize/transform.h>
 
 #include <core/utils/logging.h>
 #include <marc/onnx/optimize/transform_utils.h>
@@ -25,6 +26,17 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
 namespace mariana { namespace onnx {
+
+bool OnnxScope::save(const std::string& name) {
+    std::ofstream fs(name);
+    if (fs.fail()) {
+        MCHECK(false)<<"Open file:"<<name<<" failed.";
+        return false;
+    }
+    onnx_model.SerializeToOstream(&fs);
+    fs.close();
+    return true;
+}
 
 bool OnnxScope::parse(const std::string& name, ::onnx::ModelProto& onnx_model) {
     std::ifstream is(name, std::ios::in | std::ios::binary);
@@ -146,22 +158,29 @@ Status OnnxScope::sort_by_execution_order(const ::onnx::GraphProto& input_graph,
     return absl::OkStatus();
 }
 
+void OnnxScope::update(const ::onnx::GraphProto& graph) {
+    *onnx_model.mutable_graph() = graph;
+    graph_info = init_graph_info(onnx_model.graph());
+    nodes_info = init_nodes_info(onnx_model.graph());
+}
+
 Graph* parse(const std::string& name) {
     register_converter();
     OnnxScope onnx_scope(name);
-    Graph* graph = new Graph{};
-    transform::TransformRegistry* reg = transform::get_transform_registry();
-    (*reg)["fold_identity_to_conv"](onnx_scope);
+
+    // 1. Optimie onnx graph first.
+    transform::transform(onnx_scope, {"fold_identity_to_conv"});
     
-    // register_funcs();
-    // for (const ::onnx::NodeProto& node : onnx_scope.graph_info.graph->node()) {
-    //     if (1 == CONTINUE_OP.count(node.op_type())) continue;
-    //     OnnxConverter* convert = OnnxHolder::search(node.op_type());
-    //     Node& dst = graph->add_node(node.name(), node.op_type());
-    //     convert->run(node, dst, onnx_scope);
-    // }
-    // unregister_funcs();
-    // unregister_converter();
+    Graph* graph = new Graph{};
+    register_funcs();
+    // 2. Convert onnx node to us.
+    for (const ::onnx::NodeProto& node : onnx_scope.graph_info.graph->node()) {
+        OnnxConverter* convert = OnnxHolder::search(node.op_type());
+        Node& dst = graph->add_node(node.name(), node.op_type());
+        convert->run(node, dst, onnx_scope);
+    }
+    unregister_funcs();
+    unregister_converter();
     return graph;
 }
 
