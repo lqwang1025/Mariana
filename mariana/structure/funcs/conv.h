@@ -31,6 +31,7 @@ struct ConvOption : public BaseOption {
     ~ConvOption() {}
     std::vector<int32_t> dilations;
     int32_t group = 1;
+    int32_t oc = 0;
     std::vector<int32_t> kernel_shape;
     std::vector<int32_t> pads;
     std::vector<int32_t> strides;

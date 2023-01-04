@@ -43,6 +43,7 @@ void ConvConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope
         }
         func->option.weights.push_back(t);
     }
+    func->option.oc = func->option.weights[0].shape()[0];
 }
 
 }} // namespace mariana::onnx

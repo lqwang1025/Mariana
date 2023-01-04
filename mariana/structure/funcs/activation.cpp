@@ -10,6 +10,7 @@
  */
 
 #include <structure/funcs/activation.h>
+#include <core/utils/logging.h>
 
 namespace mariana {
 
@@ -18,7 +19,9 @@ tensor_list ActivationFunction::compute(tensor_list&& inputs) {
 }
 
 ShapeList ActivationFunction::infer_shape(ShapeList shapes) {
-    
+    MCHECK(shapes.size() == 1)<<"Now Act only support 1 input.";
+    const Shape& ishape = shapes[0];
+    return {ishape};
 }
 
 } // namespace mariana
