@@ -17,10 +17,10 @@ namespace mariana { namespace onnx { namespace transform {
 Status fold_identity_to_conv(OnnxScope& scope) {
     ::onnx::GraphProto replaced_graph;
     auto func = [](OnnxScope& scope, const NodeMatch& match,
-       std::set<std::string>* old_nodes,
-       std::set<std::string>* old_tensors,
-       std::vector<::onnx::NodeProto>* new_nodes,
-       std::vector<::onnx::TensorProto>* new_tensors) -> Status {
+                   std::set<std::string>* old_nodes,
+                   std::set<std::string>* old_tensors,
+                   std::vector<::onnx::NodeProto>* new_nodes,
+                   std::vector<::onnx::TensorProto>* new_tensors) -> Status {
         const ::onnx::NodeProto& conv_node = match.node;
         const ::onnx::NodeProto& identity_node = match.inputs[1].node;
         ::onnx::NodeProto new_node;

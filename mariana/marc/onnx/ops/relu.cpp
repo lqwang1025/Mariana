@@ -10,7 +10,7 @@
  */
 
 #include <marc/onnx/register.h>
-#include <structure/funcs/relu.h>
+#include <structure/funcs/activation.h>
 
 namespace mariana { namespace onnx {
 

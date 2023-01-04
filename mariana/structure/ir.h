@@ -36,10 +36,27 @@ public:
     static bool enable_dynamic_shape() {
         return true;
     }
+
+    Node() {}
     
     Node(NodeIndex index, Graph& graph) : index_(index), graph_(&graph), func_(nullptr) {}
+
+    Node(const Node& rhs) {
+        this->operator=(rhs);
+    }
+
+    Node& operator=(const Node& rhs) {
+        if (this == &rhs) return *this;
+        index_ = rhs.index_;
+        graph_ = rhs.graph_;
+        func_ = rhs.func_;
+        op_ = rhs.op_;
+        name_ = rhs.name_;
+        relationships_ = rhs.relationships_;
+        return *this;
+    }
     
-    ~Node() { delete func_; }
+    ~Node() {}
     
     NodeIndex index() const noexcept { return index_; }
     
@@ -47,14 +64,19 @@ public:
     
     const std::string& op_type() const noexcept { return op_; }
 
-    Function* op() noexcept { return func_; }
+    tensor_list apply(tensor_list&& inputs) {
+        // for (relationships_.input_edges)
+        return func_->compute(std::move(inputs));
+    }
+    
+    Function* op() noexcept { return func_.get(); }
 
     void init(const std::string& name, const std::string& op) {
         name_ = name;
         op_ = op;
         auto func_make = FunctionHolder::search(op);
         MCHECK(func_make!=nullptr)<<"There is no func in registry:"<<op;
-        func_ = func_make();
+        func_.reset(func_make());
     }
     
     class EdgeEnd {
@@ -81,6 +103,19 @@ public:
     class Relationships {
     public:
         Relationships() = default;
+        ~Relationships() {
+            clear();
+        }
+        Relationships(const Relationships& rhs) {
+            this->operator=(rhs);
+        }
+        Relationships& operator=(const Relationships& rhs) {
+            if (this == &rhs) return *this;
+            input_edges = rhs.input_edges;
+            output_edges = rhs.output_edges;
+            control_inputs = rhs.control_inputs;
+            return *this;
+        }
         void clear() noexcept {
             input_edges.clear();
             output_edges.clear();
@@ -92,8 +127,7 @@ public:
         EdgeSet output_edges;
         /** The Node names of the control inputs to this Node. */
         std::set<std::string> control_inputs;
-    private:
-        MAR_DISABLE_COPY_AND_ASSIGN(Relationships);
+        
     };
     Relationships& relationships() {
         return relationships_;
@@ -104,17 +138,28 @@ public:
     friend class Graph;
 private:
     NodeIndex index_ = std::numeric_limits<NodeIndex>::max();
-    Graph* graph_;
-    Function* func_;
-    std::string op_;
-    std::string name_;
+    Graph* graph_ = nullptr;
+    std::shared_ptr<Function> func_;
+    std::string op_ = "";
+    std::string name_ = "";
     Relationships relationships_;
-    
 };
 
 class Graph {
 public:
     Graph() {}
+    Graph(const Graph& rhs) {
+        this->operator=(rhs);
+    }
+    Graph& operator=(const Graph& rhs) {
+        if (this == &rhs) {
+            return *this;
+        }
+        nodes_ = rhs.nodes_;
+        name_ = rhs.name_;
+        num_of_nodes_ = rhs.num_of_nodes_;
+        return *this;
+    }
     Node& add_node(const std::string& name, const std::string& op_type);
     Node* make_node();
     size_t num_of_nodes(void) const {

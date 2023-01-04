@@ -28,9 +28,6 @@ using edge_list = std::vector<Edge>;
 struct Function {
     Function() : next_(nullptr) {}
     virtual ~Function() = default;
-    tensor_list operator()(tensor_list&& inputs) {
-        return compute(std::move(inputs));
-    }
     void set_next(std::shared_ptr<Function> next) {
         next_ = next;
     }

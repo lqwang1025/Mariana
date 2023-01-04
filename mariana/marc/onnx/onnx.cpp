@@ -21,6 +21,7 @@
 #include <marc/onnx/optimize/transform.h>
 
 #include <core/utils/logging.h>
+#include <maro/transform_utils.h>
 #include <marc/onnx/optimize/transform_utils.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>

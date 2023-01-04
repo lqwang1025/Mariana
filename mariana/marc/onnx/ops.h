@@ -19,6 +19,8 @@ namespace mariana { namespace onnx {
 
 #define KConv "Conv"
 #define KRelu "Relu"
+#define KSoftmax "Softmax"
+#define KReshape "Reshape"
 #define KMaxPool "MaxPool"
 #define KAdd "Add"
 #define KGlobalAveragePool "GlobalAveragePool"

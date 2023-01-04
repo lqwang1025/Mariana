@@ -12,15 +12,76 @@
 #ifndef __MARO_TRANSFORM_UTILS_H__
 #define __MARO_TRANSFORM_UTILS_H__
 
+#include <map>
 #include <string>
 #include <vector>
+
+#include <structure/ir.h>
+#include <core/utils/status.h>
 
 namespace mariana { namespace transform {
 
 struct OpTypePattern {
     std::string op;
     std::vector<OpTypePattern> inputs;
+    std::string debug_string() const;
 };
+
+struct NodeMatch {
+    NodeMatch() : node() {}
+    Node node;
+    std::vector<NodeMatch> inputs;
+    std::string debug_string() const;
+};
+
+Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
+                                const std::function<Status(Scope& scope, const NodeMatch&, std::set<std::string>*, std::vector<Node>*)>& node_generator, Graph* dst);
+
+class GraphMatcher {
+public:
+    GraphMatcher(Graph& graph);
+
+    // Sorts the input nodes into execution order, and then skips any previously
+    // matches so that no node appears in more than one match. The NodeDef
+    // pointers contained in the results are owned by the GraphMatcher object, and
+    // so will be invalid after its lifetime.
+    Status get_optype_matches(const OpTypePattern& pattern,
+                              std::vector<NodeMatch>* matches);
+    const Scope& scope() const {
+        return scope_;
+    }
+    Scope& scope() {
+        return scope_;
+    }
+private:
+    bool _does_optype_match(const Node& node, const OpTypePattern& pattern,
+                            const std::set<std::string>& previously_matched_nodes,
+                            NodeMatch* match);
+    Graph graph_;
+    Scope scope_;
+    
+};
+
+typedef std::function<Status(Graph& graph)> TransformFunc;
+typedef std::map<std::string, TransformFunc> TransformRegistry;
+TransformRegistry* get_transform_registry();
+
+class TransformRegistrar {
+public:
+    TransformRegistrar(const std::string& name, TransformFunc transform_func) {
+        TransformRegistry* transform_registry = get_transform_registry();
+        (*transform_registry)[name] = transform_func;
+    }
+};
+
+#define REGISTER_GRAPH_TRANSFORM(name, func)                        \
+    REGISTER_GRAPH_TRANSFORM_UNIQ_HELPER(__COUNTER__, name, func)
+#define REGISTER_GRAPH_TRANSFORM_UNIQ_HELPER(ctr, name, func)   \
+    REGISTER_GRAPH_TRANSFORM_UNIQ(ctr, name, func)
+#define REGISTER_GRAPH_TRANSFORM_UNIQ(ctr, name, func)  \
+    static mariana::transform::TransformRegistrar       \
+    registrar__body__##ctr##__object(name, func);
+
 
 }} // namespace mariana::transform
 

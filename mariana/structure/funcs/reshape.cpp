@@ -2,18 +2,18 @@
  *        (C) COPYRIGHT LeiNao Limited.
  *             ALL RIGHTS RESERVED
  *
- * File       : relu.cpp
+ * File       : reshape.cpp
  * Authors    : wangliquan@zkln
- * Create Time: 2022-12-29:11:09:47
+ * Create Time: 2023-01-04:10:36:15
  * Description:
  * 
  */
 
-#include <structure/funcs/relu.h>
+#include <structure/funcs/reshape.h>
 
 namespace mariana {
 
-tensor_list ReluFunction::compute(tensor_list&& inputs) {
+tensor_list ReshapeFunction::compute(tensor_list&& inputs) {
     
 }
 
