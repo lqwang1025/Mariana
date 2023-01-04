@@ -12,9 +12,11 @@
 #ifndef __STRUCTURE_FUNCS_TENSORRT_TRT_EXECUTOR_H__
 #define __STRUCTURE_FUNCS_TENSORRT_TRT_EXECUTOR_H__
 
+#include <map>
 #include <NvInfer.h>
 
 #include <structure/ir.h>
+#include <core/utils/status.h>
 
 namespace mariana { namespace trt {
 
@@ -22,11 +24,11 @@ class TensorRTEngine {
 public:
     TensorRTEngine();
     ~TensorRTEngine() = default;
+public:
+    Status _build(const Graph& graph);
 private:
-    int _build(const Graph& graph);
-private:
-    nvinfer1::IBuilder* builder;
-    nvinfer1::INetworkDefinition* network;
+    nvinfer1::IBuilder* builder_;
+    nvinfer1::INetworkDefinition* network_;
     nvinfer1::IBuilderConfig* config;
     nvinfer1::ICudaEngine* engine;
     nvinfer1::IExecutionContext* context;

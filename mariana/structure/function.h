@@ -19,11 +19,13 @@
 #include <core/impl/type.h>
 #include <structure/edge.h>
 #include <structure/tensor.h>
+#include <core/impl/shape.h>
+#include <core/utils/arrary_ref.h>
 
 namespace mariana {
 
 using tensor_list = std::vector<Tensor>;
-using edge_list = std::vector<Edge>;
+using ShapeList = std::vector<Shape>;
 
 struct Function {
     Function() : next_(nullptr) {}
@@ -31,7 +33,17 @@ struct Function {
     void set_next(std::shared_ptr<Function> next) {
         next_ = next;
     }
+
+    tensor_list operator()(tensor_list&& inputs) {
+        tensor_list tensors = compute(std::move(inputs));
+        if (nullptr != next_) {
+            tensors = (*next_)(std::move(tensors));
+        }
+        return tensors;
+    }
+    
     virtual tensor_list compute(tensor_list&& inputs)=0;
+    virtual ShapeList infer_shape(ShapeList shapes)=0;
 protected:
     std::shared_ptr<Function> next_;
 };

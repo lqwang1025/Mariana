@@ -28,7 +28,7 @@ namespace mariana {
 class Node;
 class Graph;
 using NodePtr = std::shared_ptr<Node>;
-using OpList = ArrayRef<NodePtr>;
+using ShapeList = std::vector<Shape>;
 using NodeIndex = size_t;
 
 class Node {
@@ -53,6 +53,7 @@ public:
         op_ = rhs.op_;
         name_ = rhs.name_;
         relationships_ = rhs.relationships_;
+        otensors_ = rhs.otensors_;
         return *this;
     }
     
@@ -66,7 +67,22 @@ public:
 
     tensor_list apply(tensor_list&& inputs) {
         // for (relationships_.input_edges)
-        return func_->compute(std::move(inputs));
+        return (*func_)(std::move(inputs));
+    }
+
+    void pre_run(ShapeList shapes) {
+        for (auto it : shapes) {
+            std::cout<<it<<std::endl;
+        }
+        oshapes_ = func_->infer_shape(shapes);
+    }
+
+    const ShapeList& shapes() const {
+        return oshapes_;
+    }
+
+    ShapeList& shapes() {
+        return oshapes_;
     }
     
     Function* op() noexcept { return func_.get(); }
@@ -121,6 +137,15 @@ public:
             output_edges.clear();
             control_inputs.clear();
         }
+        
+        size_t isize() const {
+            return input_edges.size();
+        }
+
+        size_t osize() const {
+            return output_edges.size();
+        }
+        
         /** The edges for Nodes that provide inputs to this Node. */
         EdgeSet input_edges;
         /** The edges for Nodes that receive outputs from this Node. */
@@ -143,6 +168,8 @@ private:
     std::string op_ = "";
     std::string name_ = "";
     Relationships relationships_;
+    tensor_list otensors_;
+    ShapeList oshapes_;
 };
 
 class Graph {

@@ -36,6 +36,7 @@ struct GemmFunction : public Function {
     ~GemmFunction() {}
     GemmOption option;
     tensor_list compute(tensor_list&& inputs) override;
+    ShapeList infer_shape(ShapeList shapes) override;
 };
 
 } // namespace mariana

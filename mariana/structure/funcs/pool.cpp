@@ -17,4 +17,8 @@ tensor_list PoolFunction::compute(tensor_list&& inputs) {
     
 }
 
+ShapeList PoolFunction::infer_shape(ShapeList shapes) {
+    
+}
+
 } // namespace mariana

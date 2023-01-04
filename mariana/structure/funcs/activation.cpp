@@ -17,4 +17,8 @@ tensor_list ActivationFunction::compute(tensor_list&& inputs) {
     
 }
 
+ShapeList ActivationFunction::infer_shape(ShapeList shapes) {
+    
+}
+
 } // namespace mariana

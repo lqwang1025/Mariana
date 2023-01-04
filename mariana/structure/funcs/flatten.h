@@ -30,6 +30,7 @@ struct FlattenFunction : public Function {
     ~FlattenFunction() {}
     FlattenOption option;
     tensor_list compute(tensor_list&& inputs) override;
+    ShapeList infer_shape(ShapeList shapes) override;
 };
 
 } // namespace mariana

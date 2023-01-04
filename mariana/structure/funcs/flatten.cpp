@@ -17,4 +17,8 @@ tensor_list FlattenFunction::compute(tensor_list&& inputs) {
     
 }
 
+ShapeList FlattenFunction::infer_shape(ShapeList shapes) {
+    
+}
+
 } // namespace mariana {

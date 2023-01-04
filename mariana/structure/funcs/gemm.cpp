@@ -17,4 +17,8 @@ tensor_list GemmFunction::compute(tensor_list&& inputs) {
     
 }
 
+ShapeList GemmFunction::infer_shape(ShapeList shapes) {
+    
+}
+
 } // namespace mariana

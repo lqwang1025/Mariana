@@ -30,6 +30,7 @@ struct ActivationFunction : public Function {
     ~ActivationFunction() {}
     ActivationOption option;
     tensor_list compute(tensor_list&& inputs) override;
+    ShapeList infer_shape(ShapeList shapes) override;
 };
 
 } // namespace mariana

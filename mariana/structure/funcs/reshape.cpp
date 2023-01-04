@@ -17,4 +17,8 @@ tensor_list ReshapeFunction::compute(tensor_list&& inputs) {
     
 }
 
+ShapeList ReshapeFunction::infer_shape(ShapeList shapes) {
+    
+}
+
 } // namespace mariana

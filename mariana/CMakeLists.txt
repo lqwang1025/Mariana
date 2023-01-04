@@ -40,6 +40,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -g -O3 -std=c++11 -lrt -mavx
 include(cmake/abseil.cmake)
 include(cmake/glog.cmake)
 include(cmake/protobuf.cmake)
+include(cmake/cudnn.cmake)
+include(cmake/tensorRT.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_BINARY_DIR}/generated)
@@ -56,8 +58,8 @@ add_library(${CMAKE_PROJECT_NAME} SHARED)
 target_sources(${CMAKE_PROJECT_NAME}-static PUBLIC ${MARIANA_SRC})
 target_sources(${CMAKE_PROJECT_NAME} PUBLIC ${MARIANA_SRC})
 
-target_link_libraries(${CMAKE_PROJECT_NAME}-static PUBLIC -lglog -labsl -lpthread -lprotobuf)
-target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC -lglog -labsl -lpthread -lprotobuf)
+target_link_libraries(${CMAKE_PROJECT_NAME}-static PUBLIC -lglog -labsl -lpthread -lprotobuf nvinfer)
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC -lglog -labsl -lpthread -lprotobuf nvinfer)
 
 set_target_properties(${CMAKE_PROJECT_NAME}-static PROPERTIES VERSION ${MARIANA_TARGET_VERSION} SOVERSION ${MARIANA_TARGET_SOVERSION})
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES VERSION ${MARIANA_TARGET_VERSION} SOVERSION ${MARIANA_TARGET_SOVERSION})

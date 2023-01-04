@@ -95,8 +95,11 @@ public:
     inline size_t use_count() const {
         return impl_.use_count();
     }
-  
-    
+    Tensor& operator=(const Tensor& rhs) {
+        if (this == &rhs) return *this;
+        impl_ = rhs.impl_;
+        return *this;
+    }
 public:
     std::shared_ptr<TensorImpl> impl_;
 };
