@@ -75,7 +75,7 @@ public:
     int64_t numel() const {
         return shape_.size();
     }
-    uint8_t dim() const {
+    size_t dim() const {
         return shape_.dims();
     }
     int64_t storage_offset() const {

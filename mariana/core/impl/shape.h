@@ -59,7 +59,7 @@ public:
     IntArrayRef data() const {
         return IntArrayRef(shape_, dims_);
     }
-    uint8_t dims() const {
+    size_t dims() const {
         return dims_;
     }
     bool empty() const {
@@ -89,7 +89,7 @@ public:
     
 private:
     int64_t shape_[MAX_DIMS];
-    uint8_t dims_;
+    size_t dims_;
     int64_t size_;
 };
 

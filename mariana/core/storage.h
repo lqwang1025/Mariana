@@ -76,7 +76,7 @@ struct Storage {
         return *this;
     }
     bool initialized() const {
-        return storage_impl_ == nullptr;
+        return storage_impl_ != nullptr;
     }
 private:
     std::shared_ptr<StorageImpl> storage_impl_;

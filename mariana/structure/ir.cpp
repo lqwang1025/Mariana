@@ -41,4 +41,39 @@ void Scope::init(Graph *graph) {
     }
 }
 
+using NodeInputs = std::unordered_map<std::string, std::vector<std::string>>;
+using NodeMap = std::unordered_map<std::string, std::shared_ptr<Node>>;
+
+static void _sort_by_exe_order(std::shared_ptr<Node> node, NodeInputs& node_in,
+                               std::set<std::string>& visited) {
+    
+}
+
+void Scope::sort_by_exe_order(Graph *graph) {
+    std::cout<<"debug:"<<graph->num_of_nodes()<<std::endl;
+    std::vector<std::shared_ptr<Node>> order_nodes;
+    std::set<std::string> visited;
+    NodeInputs node_inputs;
+    NodeMap _node_name_map;
+    for (auto it : graph->nodes()) {
+        _node_name_map.insert({it->name(), it});
+    }
+    for (auto& it : graph->nodes()) {
+        std::vector<std::string> inputs;
+        for (auto& input : it->inputs()) {
+            inputs.push_back(input->name());
+        }
+        node_inputs.insert({it->name(), inputs});
+    }
+    
+    while (!_node_name_map.empty()) {
+        for (auto& it : graph->nodes()) {
+            if (node_inputs[it->name()].size() == 0) {
+                _node_name_map.erase(it->name());
+            }
+        }
+    }
+    std::cout<<"debug:"<<node_inputs.size()<<std::endl;
+}
+
 } // namespace mariana

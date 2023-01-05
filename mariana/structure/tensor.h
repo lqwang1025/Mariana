@@ -56,7 +56,7 @@ public:
     int64_t numel() const {
         return impl_->numel();
     }
-    uint8_t dim() const {
+    size_t dim() const {
         return impl_->dim();
     }
     int64_t storage_offset() const {

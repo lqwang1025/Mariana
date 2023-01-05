@@ -36,10 +36,11 @@ void ConvConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope
         ::onnx::TensorProto_DataType data_type = static_cast<::onnx::TensorProto_DataType>(weight->data_type());
         
         switch (data_type) {
-        case ::onnx::TensorProto_DataType::TensorProto_DataType_FLOAT :
+        case ::onnx::TensorProto_DataType::TensorProto_DataType_FLOAT : {
             float* data = t.mutable_data<float>();
             memcpy(data, content, t.numel()*t.itemsize());
             break;
+        }
         }
         func->option.weights.push_back(t);
     }

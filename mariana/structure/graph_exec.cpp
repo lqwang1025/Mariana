@@ -21,14 +21,13 @@ void GraphExec::run(Graph& graph, ExecContext& context) {
 
 void GraphExec::pre_run(Graph& graph, ExecContext& context) {
     for (auto& node : graph.nodes()) {
-        auto& relationships = node->relationships();
-        if (relationships.isize() == 0) {
+        if (node->inputs().size() == 0) {
             node->pre_run({context.ishapes.at(node->name())});
         } else {
             ShapeList shapes;
-            for (auto it : relationships.input_edges) {
-                shapes.insert(shapes.end(), it.get_node().shapes().begin(),
-                              it.get_node().shapes().end());
+            for (auto& it : node->inputs()) {
+                shapes.insert(shapes.end(), it->shapes().begin(),
+                              it->shapes().end());
             }
             node->pre_run(shapes);
         }

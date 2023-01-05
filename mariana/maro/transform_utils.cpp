@@ -150,6 +150,7 @@ Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
     for (auto& it : new_nodes) {
         *dst->make_node() = it;
     }
+    Scope::sort_by_exe_order(dst);
     return status;
 }
 

@@ -27,8 +27,8 @@ namespace mariana {
 
 class Node;
 class Graph;
-using NodePtr = std::shared_ptr<Node>;
 using ShapeList = std::vector<Shape>;
+using NodeList = std::vector<const Node*>;
 using NodeIndex = size_t;
 
 class Node {
@@ -59,6 +59,22 @@ public:
     
     ~Node() {}
     
+    NodeList inputs() const {
+        NodeList node_list;
+        for (auto& it : relationships_.input_edges) {
+            node_list.push_back(&it.get_node());
+        }
+        return node_list;
+    }
+    
+    NodeList outputs() const {
+        NodeList node_list;
+        for (auto& it : relationships_.output_edges) {
+            node_list.push_back(&it.get_node());
+        }
+        return node_list;
+    }
+    
     NodeIndex index() const noexcept { return index_; }
     
     const std::string& name() const noexcept { return name_; }
@@ -73,9 +89,8 @@ public:
     void pre_run(ShapeList shapes) {
         oshapes_ = func_->infer_shape(shapes);
         float flops = func_->compute_FLOPs(oshapes_);
-        std::cout<<"name:"<<name()<<" "<<flops<<std::endl;
     }
-
+    
     const ShapeList& shapes() const {
         return oshapes_;
     }
@@ -84,7 +99,7 @@ public:
         return oshapes_;
     }
     
-    Function* op() noexcept { return func_.get(); }
+    Function* op() const noexcept { return func_.get(); }
 
     void init(const std::string& name, const std::string& op) {
         name_ = name;
@@ -156,6 +171,18 @@ public:
     Relationships& relationships() {
         return relationships_;
     }
+    void clear_output() {
+        relationships().output_edges.clear();
+    }
+    void update_output(const Node* output, int32_t index) {
+        relationships().output_edges.insert({output, index});
+    }
+    void clear_input() {
+        relationships().input_edges.clear();
+    }
+    void update_input(const Node* input, int32_t index) {
+        relationships().input_edges.insert({input, index});
+    }
     const Relationships& relationships() const {
         return relationships_;
     }
@@ -181,6 +208,7 @@ public:
         if (this == &rhs) {
             return *this;
         }
+        nodes_.clear();
         nodes_ = rhs.nodes_;
         name_ = rhs.name_;
         num_of_nodes_ = rhs.num_of_nodes_;
@@ -216,6 +244,7 @@ struct Scope {
     ~Scope() {}
     void init(Graph *graph);
     std::unordered_map<std::string, std::shared_ptr<Node>> node_name_map;
+    static void sort_by_exe_order(Graph *graph);
 };
 
 } // namespace mariana
