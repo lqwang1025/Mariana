@@ -9,6 +9,7 @@
  * 
  */
 
+#include <structure/ir.h>
 #include <structure/graph_exec.h>
 #include <iostream>
 
@@ -23,11 +24,13 @@ void GraphExec::pre_run(Graph& graph, ExecContext& context) {
         auto& relationships = node->relationships();
         if (relationships.isize() == 0) {
             node->pre_run({context.ishapes.at(node->name())});
-            std::cout<<"debug:"<<node->name()<<std::endl;
         } else {
+            ShapeList shapes;
             for (auto it : relationships.input_edges) {
-                node->pre_run(it.get_node().shapes());
+                shapes.insert(shapes.end(), it.get_node().shapes().begin(),
+                              it.get_node().shapes().end());
             }
+            node->pre_run(shapes);
         }
     }
 }

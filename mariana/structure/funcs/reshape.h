@@ -24,6 +24,7 @@ namespace mariana {
 struct ReshapeOption : public BaseOption {
     ReshapeOption() {}
     ~ReshapeOption() {}
+    std::vector<int64_t> shape;
 };
 
 struct ReshapeFunction : public Function {
@@ -32,6 +33,9 @@ struct ReshapeFunction : public Function {
     ReshapeOption option;
     tensor_list compute(tensor_list&& inputs) override;
     ShapeList infer_shape(ShapeList shapes) override;
+    float compute_FLOPs(ShapeList oshapes) override {
+        return 0.f;
+    }
 };
 
 } // namespace mariana

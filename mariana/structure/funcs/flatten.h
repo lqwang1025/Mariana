@@ -31,6 +31,9 @@ struct FlattenFunction : public Function {
     FlattenOption option;
     tensor_list compute(tensor_list&& inputs) override;
     ShapeList infer_shape(ShapeList shapes) override;
+    float compute_FLOPs(ShapeList oshapes) override {
+        return 0.f;
+    }
 };
 
 } // namespace mariana

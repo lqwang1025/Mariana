@@ -2,7 +2,7 @@
  *        (C) COPYRIGHT LeiNao Limited.
  *             ALL RIGHTS RESERVED
  *
- * File       : relu.cpp
+ * File       : act.cpp
  * Authors    : wangliquan@zkln
  * Create Time: 2022-12-27:16:52:38
  * Description:
@@ -14,7 +14,7 @@
 
 namespace mariana { namespace onnx {
 
-void ReluConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope& scope) {
+void ActConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope& scope) {
 }
 
 }} // namespace mariana::onnx

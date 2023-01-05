@@ -70,4 +70,24 @@ ShapeList ConvFunction::infer_shape(ShapeList shapes) {
     return {{n, out_c, out_h, out_w}};
 }
 
+float ConvFunction::compute_FLOPs(ShapeList oshapes) {
+    // when calc i * w, calculation have two parts: multiplication, addition
+    // flop(weight * kernel) of mul =  k_w * k_h * k_c      *  out_w * out_h * out_c;
+    // flop(weight * kernel) of add = (k_w * k_h * k_c - 1) *  out_w * out_h * out_c;
+    // flop(result + bias)          =  out_w * out_h * out_c;
+    // so total calculation         =  k_w * k_h * k_c      *  out_w * out_h * out_c * 2;
+    MCHECK(oshapes.size() == 1);
+    const Shape& oshape = oshapes[0]; // n c h w
+    int kernel_volume = 1, feature_volume = 1;
+    for (size_t i = 1; i < oshape.dims(); ++i) {
+        feature_volume *= oshape[i];
+    }
+    const Shape& kshape = option.weights[0].shape();
+    for (size_t i = 1; i < kshape.dims(); ++i) {
+        kernel_volume *= kshape[i];
+    }
+    float flops = (float)feature_volume * (float)kernel_volume * 2.f;
+    return flops/1024.f/1024.f;
+}
+
 } // namespace mariana

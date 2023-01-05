@@ -12,6 +12,8 @@
 #ifndef __CORE_MACROS_MACROS_H__
 #define __CORE_MACROS_MACROS_H__
 
+#define UP_DIV(x, y) (((x) + (y) - (1)) / (y))
+
 #define MAR_DISABLE_COPY_AND_ASSIGN(classname)      \
     classname(const classname&) = delete;           \
     classname& operator=(const classname&) = delete

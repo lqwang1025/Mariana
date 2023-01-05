@@ -19,7 +19,7 @@ tensor_list ActivationFunction::compute(tensor_list&& inputs) {
 }
 
 ShapeList ActivationFunction::infer_shape(ShapeList shapes) {
-    MCHECK(shapes.size() == 1)<<"Now Act only support 1 input.";
+    MCHECK(shapes.size() == 1)<<"Now Act only support 1 input:"<<shapes.size();
     const Shape& ishape = shapes[0];
     return {ishape};
 }

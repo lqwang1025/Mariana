@@ -17,7 +17,6 @@
 #include <unordered_map>
 
 #include <core/impl/type.h>
-#include <structure/edge.h>
 #include <structure/tensor.h>
 #include <core/impl/shape.h>
 #include <core/utils/arrary_ref.h>
@@ -44,6 +43,7 @@ struct Function {
     
     virtual tensor_list compute(tensor_list&& inputs)=0;
     virtual ShapeList infer_shape(ShapeList shapes)=0;
+    virtual float compute_FLOPs(ShapeList oshapes);
 protected:
     std::shared_ptr<Function> next_;
 };

@@ -24,7 +24,7 @@ void PoolConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope
         func->option.type = PoolType::Max;
         GET_ONNX_NODE_ATTR(src, "kernel_shape", &func->option.kernel_shape);
         GET_ONNX_NODE_ATTR(src, "pads", &func->option.pads);
-        GET_ONNX_NODE_ATTR(src, "pads", &func->option.strides);
+        GET_ONNX_NODE_ATTR(src, "strides", &func->option.strides);
         GET_ONNX_NODE_ATTR(src, "ceil_mode", &func->option.ceil_mode);
     } else if (src.op_type() == KGlobalAveragePool) {
         func->option.type = PoolType::GAvg;

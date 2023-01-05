@@ -28,10 +28,10 @@ void register_converter() {
     ADD_CONVERT(Conv, ConvConverter);
     ADD_CONVERT(Reshape, ReshapeConverter);
     ADD_CONVERT(Resize, ResizeConverter);
-    ADD_CONVERT(Sigmoid, SigmoidConverter);
+    ADD_CONVERT(Sigmoid, ActConverter);
     ADD_CONVERT(Split, SplitConverter);
     ADD_CONVERT(Transpose, TransposeConverter);
-    ADD_CONVERT(Relu, ReluConverter);
+    ADD_CONVERT(Relu, ActConverter);
     ADD_CONVERT(Gemm, GemmConverter);
 }
 #undef ADD_CONVERT

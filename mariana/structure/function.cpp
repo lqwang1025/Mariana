@@ -10,3 +10,13 @@
  */
 
 #include <structure/function.h>
+#include <core/utils/logging.h>
+
+namespace mariana {
+
+float Function::compute_FLOPs(ShapeList oshapes) {
+    MCHECK(oshapes.size() == 1);
+    return static_cast<float>(oshapes[0].size() / 1024.f / 1024.f);
+}
+
+} // namespace mariana
