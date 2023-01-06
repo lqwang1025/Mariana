@@ -21,10 +21,9 @@ Node::EdgeEnd::EdgeEnd(const Node* node) noexcept : EdgeEnd(node, INT_MAX) {}
 
 Node* Graph::make_node() {
     MCHECK(nodes_.size() < static_cast<unsigned int>(std::numeric_limits<int>::max()));
-    std::unique_ptr<Node> new_node(new Node(nodes_.size(), *this));
+    std::shared_ptr<Node> new_node(new Node(nodes_.size(), *this));
     Node* node{new_node.get()};
     nodes_.push_back(std::move(new_node));
-    ++num_of_nodes_;
     return node;
 }
 
@@ -44,15 +43,31 @@ void Scope::init(Graph *graph) {
 using NodeInputs = std::unordered_map<std::string, std::vector<std::string>>;
 using NodeMap = std::unordered_map<std::string, std::shared_ptr<Node>>;
 
-static void _sort_by_exe_order(std::shared_ptr<Node> node, NodeInputs& node_in,
+static void _sort_by_exe_order(const Graph *graph, NodeInputs& node_in,
+                               std::vector<std::shared_ptr<Node>>& order_nodes,
                                std::set<std::string>& visited) {
-    
+    if (node_in.empty()) return;
+    size_t node_size = graph->num_of_nodes();
+    for (size_t i = 0; i < node_size; ++i) {
+        if (visited.count(graph->nodes(i)->name()) == 1) continue;
+        if (node_in[graph->nodes(i)->name()].size() == 0) { // input node
+            order_nodes.push_back(graph->nodes(i));
+            visited.insert(graph->nodes(i)->name());
+            node_in.erase(graph->nodes(i)->name());
+            for (auto& it : node_in) {
+                for (size_t _i = 0; _i < it.second.size(); ++_i) {
+                    if (it.second[_i] == graph->nodes(i)->name()) {
+                        it.second.erase(it.second.begin()+_i);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    _sort_by_exe_order(graph, node_in, order_nodes, visited);
 }
 
 void Scope::sort_by_exe_order(Graph *graph) {
-    std::cout<<"debug:"<<graph->num_of_nodes()<<std::endl;
-    std::vector<std::shared_ptr<Node>> order_nodes;
-    std::set<std::string> visited;
     NodeInputs node_inputs;
     NodeMap _node_name_map;
     for (auto it : graph->nodes()) {
@@ -66,14 +81,10 @@ void Scope::sort_by_exe_order(Graph *graph) {
         node_inputs.insert({it->name(), inputs});
     }
     
-    while (!_node_name_map.empty()) {
-        for (auto& it : graph->nodes()) {
-            if (node_inputs[it->name()].size() == 0) {
-                _node_name_map.erase(it->name());
-            }
-        }
-    }
-    std::cout<<"debug:"<<node_inputs.size()<<std::endl;
+    std::set<std::string> visited;
+    std::vector<std::shared_ptr<Node>> order_nodes;
+    _sort_by_exe_order(graph, node_inputs, order_nodes, visited);
+    graph->nodes() = order_nodes;
 }
 
 } // namespace mariana

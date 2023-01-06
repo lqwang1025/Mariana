@@ -30,9 +30,16 @@ Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
     builder_ = nvinfer1::createInferBuilder(gLogger);
     network_ = builder_->createNetwork();
     for (auto& node : graph.nodes()) {
-        if (layer_make_map_.count(node->op_type()))
-            layer_make_map_[node->op_type()](this, *node, context);
+        std::cout<<"debug:"<<node->name()<<std::endl;
+        for (auto& input : node->inputs()) {
+            std::cout<<"------>input:"<<input->name()<<std::endl;
+        }
     }
+    // for (auto& node : graph.nodes()) {
+    //     std::cout<<"debug:"<<node->name()<<std::endl;
+    //     if (layer_make_map_.count(node->op_type()))
+    //         layer_make_map_[node->op_type()](this, *node, context);
+    // }
     return absl::OkStatus();
 }
 

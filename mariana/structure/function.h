@@ -28,7 +28,7 @@ using ShapeList = std::vector<Shape>;
 
 struct Function {
     Function() : next_(nullptr) {}
-    virtual ~Function() = default;
+    virtual ~Function() {std::cout<<"func delete"<<std::endl;}
     void set_next(std::shared_ptr<Function> next) {
         next_ = next;
     }

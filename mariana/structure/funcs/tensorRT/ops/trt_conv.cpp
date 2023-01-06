@@ -17,13 +17,18 @@
 namespace mariana { namespace trt {
 
 bool TensorRTEngine::_add_convolution_node(const Node& node, const ExecContext& context) {
+    std::cout<<"gfffffffffffffffffffffff"<<std::endl;
     NodeList inputs = node.inputs();
+    // std::cout<<"deug:"<<inputs[0]<<std::endl;
+    std::cout<<"debug:"<<inputs.size()<<std::endl;
     nvinfer1::ITensor* itensor;
     if (inputs.size() == 0) {
         const Shape& ishape = context.ishapes.at(node.name());
         itensor = _add_tensor(ishape, node.name()+"_input", nvinfer1::DataType::kFLOAT);
     } else if (inputs.size() == 1) {
+        std::cout<<"de:"<<inputs[0]->name()<<std::endl;
         const Shape& ishape = inputs[0]->shapes()[0];
+        std::cout<<"de:"<<inputs[0]->shapes().size()<<std::endl;
         itensor = _add_tensor(ishape, inputs[0]->name(), nvinfer1::DataType::kFLOAT);
     } else {
         MCHECK(false);

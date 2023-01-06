@@ -54,6 +54,7 @@ public:
         name_ = rhs.name_;
         relationships_ = rhs.relationships_;
         otensors_ = rhs.otensors_;
+        oshapes_ = rhs.oshapes_;
         return *this;
     }
     
@@ -85,10 +86,11 @@ public:
         // for (relationships_.input_edges)
         return (*func_)(std::move(inputs));
     }
-
+ 
     void pre_run(ShapeList shapes) {
         oshapes_ = func_->infer_shape(shapes);
         float flops = func_->compute_FLOPs(oshapes_);
+        // std::cout<<"debug:"<<name()<<" "<<flops<<std::endl;
     }
     
     const ShapeList& shapes() const {
@@ -132,10 +134,8 @@ public:
 
     class Relationships {
     public:
-        Relationships() = default;
-        ~Relationships() {
-            clear();
-        }
+        Relationships() { clear(); }
+        ~Relationships() { clear(); }
         Relationships(const Relationships& rhs) {
             this->operator=(rhs);
         }
@@ -211,13 +211,12 @@ public:
         nodes_.clear();
         nodes_ = rhs.nodes_;
         name_ = rhs.name_;
-        num_of_nodes_ = rhs.num_of_nodes_;
         return *this;
     }
     Node& add_node(const std::string& name, const std::string& op_type);
     Node* make_node();
     size_t num_of_nodes(void) const {
-        return num_of_nodes_;
+        return nodes_.size();
     }
     const std::vector<std::shared_ptr<Node>>& nodes() const {
         return nodes_;
@@ -234,7 +233,6 @@ public:
 private:
     std::vector<std::shared_ptr<Node>> nodes_;
     std::string name_ = "";
-    size_t num_of_nodes_ = 0;
 };
 
 struct Scope {
