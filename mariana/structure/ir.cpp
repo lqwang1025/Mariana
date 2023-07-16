@@ -87,4 +87,19 @@ void Scope::sort_by_exe_order(Graph *graph) {
     graph->nodes() = order_nodes;
 }
 
+std::ostream& operator<<(std::ostream& out, const Graph& graph) {
+    for (auto& node : graph.nodes()) {
+        out<<"NodeName:"<<node->name()<<" OPType:"<<node->op_type()<<std::endl;
+        for (auto& input : node->inputs()) {
+            out<<"    ---->InputName:"
+               <<input->name()<<" OPType:"<<input->op_type()<<std::endl;;
+        }
+        for (auto& output : node->outputs()) {
+            out<<"    ---->OutputName:"
+               <<output->name()<<" OPType:"<<output->op_type()<<std::endl;;
+        }
+    }
+    return out;
+}
+
 } // namespace mariana

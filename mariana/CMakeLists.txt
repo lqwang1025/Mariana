@@ -41,6 +41,7 @@ include(cmake/abseil.cmake)
 include(cmake/glog.cmake)
 include(cmake/protobuf.cmake)
 include(cmake/cudnn.cmake)
+include(cmake/cuda.cmake)
 include(cmake/tensorRT.cmake)
 
 include_directories(${CMAKE_SOURCE_DIR})

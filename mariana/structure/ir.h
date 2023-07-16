@@ -235,6 +235,8 @@ private:
     std::string name_ = "";
 };
 
+std::ostream& operator<<(std::ostream& out, const Graph& graph);
+
 struct Scope {
     Scope(Graph *graph) {
         init(graph);

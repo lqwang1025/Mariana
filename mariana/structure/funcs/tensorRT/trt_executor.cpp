@@ -28,7 +28,8 @@ Status TensorRTEngine::pre_run(const Graph& graph, const ExecContext& context) {
 
 Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
     builder_ = nvinfer1::createInferBuilder(gLogger);
-    network_ = builder_->createNetwork();
+    const auto _explicit_batch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+    network_ = builder_->createNetworkV2(_explicit_batch);
     for (auto& node : graph.nodes()) {
         std::cout<<"debug:"<<node->name()<<std::endl;
         for (auto& input : node->inputs()) {

@@ -21,7 +21,7 @@ int main() {
     // std::cout<<"debug:"<<t.shape()<<" "<<t.stride()<<std::endl;
     // float* s = t.mutable_data<float>();
     // mariana::get_cpu_allocator()->allocate(1024);
-    mariana::Graph* graph = mariana::parse("/home/wangliquan/learn/Mariana/mariana/build/PD-GZ-scene_class-20220326.sim.onnx");
+    mariana::Graph* graph = mariana::parse("/home/home/lqwang/project/Mariana/mariana/build/res.onnx");
     mariana::ExecContext context;
     context.ishapes.insert({"Conv_0", {1, 3, 224, 224}});
 

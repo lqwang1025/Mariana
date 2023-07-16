@@ -1,1 +1,28 @@
+if(NOT DEFINED ENV{CUDA_TOOLKIT_ROOT_DIR})
+  set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda) # 
+endif()
 
+if(NOT DEFINED ENV{CUDA_INCLUDE_DIRS})
+  set(CUDA_INCLUDE_DIRS ${CUDA_TOOLKIT_ROOT_DIR}/include)
+endif()
+if(NOT DEFINED ENV{CUDA_TOOLKIT_INCLUDE})
+  set(CUDA_TOOLKIT_INCLUDE ${CUDA_TOOLKIT_ROOT_DIR}/include)
+endif()
+if(NOT DEFINED ENV{CUDA_CUDART_LIBRARY})
+  list(APPEND CUDA_CUDART_LIBRARY ${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcudart.so)
+  list(APPEND CUDA_CUDART_LIBRARY ${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcublas.so)
+  list(APPEND CUDA_CUDART_LIBRARY ${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcublasLt.so)
+  
+  list(APPEND CUDA_STATIC_LIBRARY ${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcudart_static.a)
+  list(APPEND CUDA_STATIC_LIBRARY ${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcublas_static.a)
+  list(APPEND CUDA_STATIC_LIBRARY ${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcublasLt_static.a)
+  list(APPEND CUDA_STATIC_LIBRARY ${CUDA_TOOLKIT_ROOT_DIR}/lib64/libculibos.a)
+  
+endif()
+find_package(CUDA REQUIRED)
+include_directories(${CUDA_TOOLKIT_INCLUDE})
+
+if(NOT CUDA_FOUND)
+  message("Do not find cuda lib.")
+  return()
+endif()
