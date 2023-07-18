@@ -177,12 +177,14 @@ public:
         relationships().output_edges.clear();
     }
     void update_output(Node* output, int32_t index) {
+        relationships().output_edges.erase({output, index});
         relationships().output_edges.insert({output, index});
     }
     void clear_input() {
         relationships().input_edges.clear();
     }
     void update_input(Node* input, int32_t index) {
+        relationships().input_edges.erase({input, index});
         relationships().input_edges.insert({input, index});
     }
     const Relationships& relationships() const {
