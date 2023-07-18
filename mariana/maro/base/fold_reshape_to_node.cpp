@@ -25,6 +25,7 @@ namespace mariana { namespace transform {
 Status base_fold_reshape_to_node(Graph& graph) {
     Graph replaced_graph;
     Scope scope(&graph);
+    std::cout<<"gg:"<<graph<<std::endl;
     auto func = [](Scope& scope, const NodeMatch& match,
                    std::set<std::string>* old_nodes,
                    std::vector<std::shared_ptr<Node>>* new_nodes) -> Status {
@@ -35,9 +36,19 @@ Status base_fold_reshape_to_node(Graph& graph) {
         
         std::shared_ptr<Node> new_node = std::make_shared<Node>();
         *new_node = any_node;
-        new_node->clear_input();
 
-        new_node->update_input(reshape_node.inputs()[0], 0);
+        /*
+         *  build link for:  AnyNode  
+         *                    / | \
+         */
+        for (auto& output : new_node->outputs()) {
+            for (size_t i = 0; i < output->inputs().size(); ++i) {
+                if (output->inputs()[i]->name() == new_node->name()) {
+                    output->update_input(new_node.get(), i);
+                    break;
+                }
+            }
+        }
         
         std::shared_ptr<Node> new_inode = std::make_shared<Node>();
         *new_inode = reshape_inode;
@@ -46,7 +57,34 @@ Status base_fold_reshape_to_node(Graph& graph) {
         new_inode->shapes().insert(new_inode->shapes().begin(),
                                    reshape_node.shapes().begin(),
                                    reshape_node.shapes().end());
-        new_inode->update_output(reshape_node.outputs()[0], 0);
+
+        /*                      
+         *  build link for:  new_inode
+         *                      |
+         */
+        new_inode->update_output(new_node.get(), 0);
+
+        /*                    \ | /
+         *  build link for:  new_inode  
+         *                    
+         */
+        std::cout<<"new inode:"<<new_inode.get()<<std::endl;
+        for (auto& input : new_inode->inputs()) {
+            for (size_t i = 0; i < input->outputs().size(); ++i) {
+                if (input->outputs()[i]->name() == new_inode->name()) {
+                    std::cout<<"sssssssssssssssss:"<<input<<"  "<<input->outputs()[i]<<std::endl;
+                    input->update_output(new_inode.get(), i);
+                    std::cout<<"sssssssssssssssss:"<<input<<"  "<<input->outputs()[i]<<std::endl;
+                    break;
+                }
+            }
+        }
+
+        /*                      |
+         *  build link for:  AnyNode
+         */
+        new_node->clear_input();
+        new_node->update_input(new_inode.get(), 0);
         
         new_nodes->push_back(new_node);
         new_nodes->push_back(new_inode);
@@ -62,6 +100,7 @@ Status base_fold_reshape_to_node(Graph& graph) {
                                  }
                              }, func, &replaced_graph);
     graph = replaced_graph;
+    std::cout<<"asdasdasdsad:"<<graph<<std::endl;
     return absl::OkStatus();
 }
 
