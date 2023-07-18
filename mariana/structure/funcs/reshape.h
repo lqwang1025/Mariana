@@ -22,8 +22,12 @@
 namespace mariana {
 
 struct ReshapeOption : public BaseOption {
-    ReshapeOption() {}
-    ~ReshapeOption() {}
+    ReshapeOption() {
+        shape.clear();
+    }
+    ~ReshapeOption() {
+        shape.clear();
+    }
     std::vector<int64_t> shape;
 };
 

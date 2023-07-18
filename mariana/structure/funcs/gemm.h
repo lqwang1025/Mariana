@@ -23,7 +23,9 @@ namespace mariana {
 
 struct GemmOption : public BaseOption {
     GemmOption() {}
-    ~GemmOption() {}
+    ~GemmOption() {
+        weights.clear();
+    }
     float alpha = 1.f;
     float beta = 1.f;
     bool trans_a = false;

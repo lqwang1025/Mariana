@@ -28,7 +28,12 @@ struct ConvOption : public BaseOption {
         strides.clear();
         weights.clear();
     }
-    ~ConvOption() {}
+    ~ConvOption() {
+        kernel_shape.clear();
+        pads.clear();
+        strides.clear();
+        weights.clear();
+    }
     std::vector<int32_t> dilations;
     int32_t group = 1;
     int32_t oc = 0;

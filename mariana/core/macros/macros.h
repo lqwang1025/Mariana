@@ -50,7 +50,12 @@
 #define MAR_ALWAYS_INLINE inline
 #endif
 
+#define TRACE_CODE()                            \
+    
+
 namespace mariana {}
+
+
 
 #endif /* __CORE_MACROS_MACROS_H__ */
 

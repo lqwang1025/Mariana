@@ -14,10 +14,15 @@
 
 namespace mariana {
 
-Node::EdgeEnd::EdgeEnd(std::shared_ptr<Node>& node, int index) noexcept : node_(node),
-    index_(index) {}
+Node::EdgeEnd::EdgeEnd(std::shared_ptr<Node>& node, int index) noexcept : node_(node.get()),
+                                                                          index_(index) {}
+
+Node::EdgeEnd::EdgeEnd(Node* node, int index) noexcept : node_(node),
+                                                         index_(index) {}
 
 Node::EdgeEnd::EdgeEnd(std::shared_ptr<Node>& node) noexcept : EdgeEnd(node, INT_MAX) {}
+
+Node::EdgeEnd::EdgeEnd(Node* node) noexcept : EdgeEnd(node, INT_MAX) {}
 
 std::shared_ptr<Node> Graph::make_node() {
     MCHECK(nodes_.size() < static_cast<unsigned int>(std::numeric_limits<int>::max()));

@@ -29,8 +29,16 @@ enum class PoolType : uint8_t {
 };
 
 struct PoolOption : public BaseOption {
-    PoolOption() {}
-    ~PoolOption() {}
+    PoolOption() {
+        kernel_shape.clear();
+        pads.clear();
+        strides.clear();
+    }
+    ~PoolOption() {
+        kernel_shape.clear();
+        pads.clear();
+        strides.clear();
+    }
     PoolType type = PoolType::None;
     int32_t ceil_mode = 0;
     std::vector<int32_t> kernel_shape;

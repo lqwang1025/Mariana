@@ -28,7 +28,7 @@ namespace mariana {
 class Node;
 class Graph;
 using ShapeList = std::vector<Shape>;
-using NodeList = std::vector<std::shared_ptr<Node>>;
+using NodeList = std::vector<Node*>;
 using NodeIndex = size_t;
 
 class Node {
@@ -114,11 +114,13 @@ public:
     class EdgeEnd {
     public:
         EdgeEnd(std::shared_ptr<Node>& node, int index) noexcept;
+        EdgeEnd(Node* node, int index) noexcept;
         explicit EdgeEnd(std::shared_ptr<Node>& node) noexcept;
-        std::shared_ptr<Node> get_node() const noexcept { return node_; }
+        explicit EdgeEnd(Node* node) noexcept;
+        Node* get_node() const noexcept { return node_; }
         int get_index() const { return index_; }
     private:
-        std::shared_ptr<Node> node_ = nullptr;
+        Node* node_ = nullptr;
         const int index_ = INT_MAX;
     };
 
@@ -174,13 +176,13 @@ public:
     void clear_output() {
         relationships().output_edges.clear();
     }
-    void update_output(std::shared_ptr<Node> output, int32_t index) {
+    void update_output(Node* output, int32_t index) {
         relationships().output_edges.insert({output, index});
     }
     void clear_input() {
         relationships().input_edges.clear();
     }
-    void update_input(std::shared_ptr<Node> input, int32_t index) {
+    void update_input(Node* input, int32_t index) {
         relationships().input_edges.insert({input, index});
     }
     const Relationships& relationships() const {
@@ -203,6 +205,9 @@ public:
     Graph() {
         nodes_.clear();
     }
+    ~Graph() {
+        nodes_.clear();
+    }
     Graph(const Graph& rhs) {
         this->operator=(rhs);
     }
@@ -215,6 +220,7 @@ public:
         name_ = rhs.name_;
         return *this;
     }
+    
     Node& add_node(const std::string& name, const std::string& op_type);
     std::shared_ptr<Node> make_node();
     size_t num_of_nodes(void) const {
