@@ -28,7 +28,7 @@ namespace mariana {
 class Node;
 class Graph;
 using ShapeList = std::vector<Shape>;
-using NodeList = std::vector<const Node*>;
+using NodeList = std::vector<std::shared_ptr<Node>>;
 using NodeIndex = size_t;
 
 class Node {
@@ -63,7 +63,7 @@ public:
     NodeList inputs() const {
         NodeList node_list;
         for (auto& it : relationships_.input_edges) {
-            node_list.push_back(&it.get_node());
+            node_list.push_back(it.get_node());
         }
         return node_list;
     }
@@ -71,7 +71,7 @@ public:
     NodeList outputs() const {
         NodeList node_list;
         for (auto& it : relationships_.output_edges) {
-            node_list.push_back(&it.get_node());
+            node_list.push_back(it.get_node());
         }
         return node_list;
     }
@@ -113,21 +113,21 @@ public:
     
     class EdgeEnd {
     public:
-        EdgeEnd(const Node* node, int index) noexcept;
-        explicit EdgeEnd(const Node* node) noexcept;
-        const Node& get_node() const noexcept { return *node_; }
+        EdgeEnd(std::shared_ptr<Node>& node, int index) noexcept;
+        explicit EdgeEnd(std::shared_ptr<Node>& node) noexcept;
+        std::shared_ptr<Node> get_node() const noexcept { return node_; }
         int get_index() const { return index_; }
     private:
-        const Node* node_ = nullptr;
+        std::shared_ptr<Node> node_ = nullptr;
         const int index_ = INT_MAX;
     };
 
     struct EdgeEndCompare {
         bool operator()(const EdgeEnd& lhs, const EdgeEnd& rhs) const {
-            if (lhs.get_node().index() == rhs.get_node().index()) {
+            if (lhs.get_node()->index() == rhs.get_node()->index()) {
                 return lhs.get_index() < rhs.get_index();
             }
-            return lhs.get_node().index() < rhs.get_node().index();
+            return lhs.get_node()->index() < rhs.get_node()->index();
         }
     };
     using EdgeSet = std::set<EdgeEnd, EdgeEndCompare>;
@@ -174,13 +174,13 @@ public:
     void clear_output() {
         relationships().output_edges.clear();
     }
-    void update_output(const Node* output, int32_t index) {
+    void update_output(std::shared_ptr<Node> output, int32_t index) {
         relationships().output_edges.insert({output, index});
     }
     void clear_input() {
         relationships().input_edges.clear();
     }
-    void update_input(const Node* input, int32_t index) {
+    void update_input(std::shared_ptr<Node> input, int32_t index) {
         relationships().input_edges.insert({input, index});
     }
     const Relationships& relationships() const {
@@ -200,7 +200,9 @@ private:
 
 class Graph {
 public:
-    Graph() {}
+    Graph() {
+        nodes_.clear();
+    }
     Graph(const Graph& rhs) {
         this->operator=(rhs);
     }
@@ -214,7 +216,7 @@ public:
         return *this;
     }
     Node& add_node(const std::string& name, const std::string& op_type);
-    Node* make_node();
+    std::shared_ptr<Node> make_node();
     size_t num_of_nodes(void) const {
         return nodes_.size();
     }

@@ -71,8 +71,8 @@ bool GraphMatcher::_does_optype_match(const Node& node, const OpTypePattern& pat
     // Ignore any control inputs for pattern-matching purposes
     std::vector<std::string> non_control_inputs;
     for (auto& input : node.relationships().input_edges) {
-        if (!input.get_node().name().empty()) {
-            non_control_inputs.push_back(input.get_node().name());
+        if (!input.get_node()->name().empty()) {
+            non_control_inputs.push_back(input.get_node()->name());
         }
     }
     if (non_control_inputs.size() != pattern.inputs.size()) {
@@ -120,7 +120,7 @@ Status GraphMatcher::get_optype_matches(const OpTypePattern& pattern,
 }
 
 Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
-                                const std::function<Status(Scope& scope, const NodeMatch&, std::set<std::string>*, std::vector<Node>*)>& node_generator, Graph* dst) {
+                                const std::function<Status(Scope& scope, const NodeMatch&, std::set<std::string>*, std::vector<std::shared_ptr<Node>>*)>& node_generator, Graph* dst) {
     GraphMatcher matcher{src};
     std::vector<NodeMatch> matches;
     Status res = matcher.get_optype_matches(pattern, &matches);
@@ -130,26 +130,20 @@ Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
     }
     Status status = absl::OkStatus();
     std::set<std::string> old_nodes;
-    std::vector<Node> new_nodes;
+    std::vector<std::shared_ptr<Node>> new_nodes;
     for (const NodeMatch& match : matches) {
-        std::vector<Node> _new_nodes;
+        std::vector<std::shared_ptr<Node>> _new_nodes;
         status = node_generator(matcher.scope(), match, &old_nodes, &_new_nodes);
         new_nodes.insert(new_nodes.end(), _new_nodes.begin(), _new_nodes.end());
     }
-    std::vector<Node> reserve_nodes;
-    reserve_nodes.reserve(src.num_of_nodes());
+
     for (auto& node : src.nodes()) {
         if (old_nodes.count(node->name())) {
             continue;
         }
-        reserve_nodes.push_back(*node);
+        new_nodes.push_back(node);
     }
-    for (auto& it : reserve_nodes) {
-        *dst->make_node() = it;
-    }
-    for (auto& it : new_nodes) {
-        *dst->make_node() = it;
-    }
+    dst->nodes() = new_nodes;
     Scope::sort_by_exe_order(dst);
     return status;
 }

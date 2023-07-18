@@ -19,7 +19,7 @@ Status base_fold_act_to_node(Graph& graph) {
     Scope scope(&graph);
     auto func = [](Scope& scope, const NodeMatch& match,
                    std::set<std::string>* old_nodes,
-                   std::vector<Node>* new_nodes) -> Status {
+                   std::vector<std::shared_ptr<Node>>* new_nodes) -> Status {
         // const Node& relu_node = match.node;
         // const Node& input_node = match.inputs[0].node;
         // ::onnx::NodeProto new_node;

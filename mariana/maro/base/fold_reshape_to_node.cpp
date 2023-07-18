@@ -14,32 +14,39 @@
 
 namespace mariana { namespace transform {
 
+/*
+ *    ReshapeInput     AnyFusedReshape
+ *         |                |
+ *      Reshape  =======>   |
+ *         |                |
+ *      AnyNode          AnyNode
+ */
+
 Status base_fold_reshape_to_node(Graph& graph) {
     Graph replaced_graph;
     Scope scope(&graph);
     auto func = [](Scope& scope, const NodeMatch& match,
                    std::set<std::string>* old_nodes,
-                   std::vector<Node>* new_nodes) -> Status {
-        std::cout<<"deu:"<<match.debug_string()<<std::endl;
+                   std::vector<std::shared_ptr<Node>>* new_nodes) -> Status {
+        std::cout<<"Match:"<<match.debug_string()<<std::endl;
         const Node& any_node = match.node;
         const Node& reshape_node = match.inputs[0].node;
         const Node& reshape_inode = match.inputs[0].inputs[0].node;
         
-        Node new_node = any_node;
-        new_node.clear_input();
-        for(size_t i = 0; i < reshape_node.inputs().size(); ++i) {
-            new_node.update_input(reshape_node.inputs()[i], i);
-        }
+        std::shared_ptr<Node> new_node = std::make_shared<Node>();
+        *new_node = any_node;
+        new_node->clear_input();
+
+        new_node->update_input(reshape_node.inputs()[0], 0);
         
-        Node new_inode = reshape_inode;
-        new_inode.clear_output();
-        new_inode.shapes().clear();
-        new_inode.shapes().insert(new_inode.shapes().begin(),
-                                  reshape_node.shapes().begin(),
-                                  reshape_node.shapes().end());
-        for(size_t i = 0; i < reshape_node.outputs().size(); ++i) {
-            new_inode.update_output(reshape_node.outputs()[i], i);
-        }
+        std::shared_ptr<Node> new_inode = std::make_shared<Node>();
+        *new_inode = reshape_inode;
+        new_inode->clear_output();
+        new_inode->shapes().clear();
+        new_inode->shapes().insert(new_inode->shapes().begin(),
+                                   reshape_node.shapes().begin(),
+                                   reshape_node.shapes().end());
+        new_inode->update_output(reshape_node.outputs()[0], 0);
         
         new_nodes->push_back(new_node);
         new_nodes->push_back(new_inode);

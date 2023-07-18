@@ -170,11 +170,11 @@ static void build_link(Graph* graph, const OnnxScope& scope) {
     for (auto& it : graph->nodes()) {
         auto& nodes = scope.nodes_info.at(it->name()).nodes;
         for (size_t i = 0; i < nodes.size(); ++i) { // input
-            Node* i_node = my_scope.node_name_map[nodes[i]->name()].get();
+            std::shared_ptr<Node> i_node = my_scope.node_name_map[nodes[i]->name()];
             Node::EdgeEnd i_edge(i_node, static_cast<int>(i));
             it->relationships().input_edges.insert(i_edge);
             
-            Node::EdgeEnd o_edge(it.get(), static_cast<int>(i_node->relationships().output_edges.size()));
+            Node::EdgeEnd o_edge(it, static_cast<int>(i_node->relationships().output_edges.size()));
             i_node->relationships().output_edges.insert(o_edge);
         }
     }

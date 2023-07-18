@@ -35,7 +35,7 @@ struct NodeMatch {
 };
 
 Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
-                                const std::function<Status(Scope& scope, const NodeMatch&, std::set<std::string>*, std::vector<Node>*)>& node_generator, Graph* dst);
+                                const std::function<Status(Scope& scope, const NodeMatch&, std::set<std::string>*, std::vector<std::shared_ptr<Node>>*)>& node_generator, Graph* dst);
 
 class GraphMatcher {
 public:
