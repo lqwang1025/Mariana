@@ -14,19 +14,31 @@
 
 namespace mariana { namespace trt {
 
-constexpr long double operator"" _GiB(long double val);
+constexpr long double operator"" _GiB(long double val) {
+    return val * (1 << 30);
+}
 
-constexpr long double operator"" _MiB(long double val);
+constexpr long double operator"" _MiB(long double val) {
+    return val * (1 << 20);
+}
 
-constexpr long double operator"" _KiB(long double val);
+constexpr long double operator"" _KiB(long double val) {
+    return val * (1 << 10);
+}
 
 // These is necessary if we want to be able to write 1_GiB instead of 1.0_GiB.
 // Since the return type is signed, -1_GiB will work as expected.
-constexpr long long int operator"" _GiB(long long unsigned int val);
+constexpr long long int operator"" _GiB(long long unsigned int val) {
+    return val * (1 << 30);
+}
 
-constexpr long long int operator"" _MiB(long long unsigned int val);
+constexpr long long int operator"" _MiB(long long unsigned int val) {
+    return val * (1 << 20);
+}
 
-constexpr long long int operator"" _KiB(long long unsigned int val);
+constexpr long long int operator"" _KiB(long long unsigned int val) {
+    return val * (1 << 10);
+}
 
 
 }} // namespace mariana::trt

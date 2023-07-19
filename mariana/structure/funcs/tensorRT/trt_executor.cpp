@@ -11,7 +11,7 @@
 
 #include <NvInferRuntime.h>
 #include <logging.h>
-
+#include <fstream>
 #include <structure/ir.h>
 #include <core/utils/logging.h>
 #include <structure/funcs/tensorRT/trt_executor.h>
@@ -53,6 +53,13 @@ Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
         }
     }
     config_.reset(builder_->createBuilderConfig());
+    config_->setMaxWorkspaceSize(16_MiB);
+    config_->setFlag(nvinfer1::BuilderFlag::kFP16);
+    nvinfer1::IHostMemory* hm = builder_->buildSerializedNetwork(*network_, *config_);
+    std::ofstream serialize_output_stream;
+    serialize_output_stream.open("./serialize_engine_output.trt", std::ios::out|std::ios::binary);
+    serialize_output_stream.write((const char*)hm->data(), hm->size());
+    serialize_output_stream.close();
     return absl::OkStatus();
 }
 

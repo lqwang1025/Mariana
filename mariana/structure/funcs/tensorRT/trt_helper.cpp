@@ -13,24 +13,4 @@
 
 namespace mariana { namespace trt {
 
-constexpr long double operator"" _GiB(long double val) {
-    return val * (1 << 30);
-}
-constexpr long double operator"" _MiB(long double val) {
-    return val * (1 << 20);
-}
-constexpr long double operator"" _KiB(long double val) {
-    return val * (1 << 10);
-}
-
-constexpr long long int operator"" _GiB(long long unsigned int val) {
-    return val * (1 << 30);
-}
-constexpr long long int operator"" _MiB(long long unsigned int val) {
-    return val * (1 << 20);
-}
-constexpr long long int operator"" _KiB(long long unsigned int val) {
-    return val * (1 << 10);
-}
-
 }} // namespace mariana::trt
