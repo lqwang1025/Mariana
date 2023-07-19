@@ -15,6 +15,7 @@
 #include <structure/ir.h>
 #include <core/utils/logging.h>
 #include <structure/funcs/tensorRT/trt_executor.h>
+#include <structure/funcs/tensorRT/trt_helper.h>
 
 namespace mariana { namespace trt {
 
