@@ -31,7 +31,7 @@ bool TensorRTEngine::_add_fc_node(const Node& node, const ExecContext& context) 
     
     const std::vector<Tensor>& weights = func->option.weights;
     nvinfer1::Weights weight{nvinfer1::DataType::kFLOAT, nullptr, 0};
-    if (weights[0].dtype() == TypeMeta::make<float>()) {
+    if (weights[0].dtype().match<float>()) {
         weight.values = weights[0].data();
         weight.count = weights[0].numel();
         weight.type = nvinfer1::DataType::kFLOAT;
@@ -41,7 +41,7 @@ bool TensorRTEngine::_add_fc_node(const Node& node, const ExecContext& context) 
     
     nvinfer1::Weights bias{nvinfer1::DataType::kFLOAT, nullptr, 0};
     if (weights.size() == 2) {
-        if (weights[1].dtype() == TypeMeta::make<float>()) {
+        if (weights[1].dtype().match<float>()) {
             bias.values = weights[1].data();
             bias.count = weights[1].numel();
             bias.type = nvinfer1::DataType::kFLOAT;
