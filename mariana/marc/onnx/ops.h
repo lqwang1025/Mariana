@@ -13,6 +13,7 @@
 #define __MARC_ONNX_OPS_H__
 
 #include <set>
+#include <map>
 #include <string>
 
 namespace mariana { namespace onnx {
@@ -31,6 +32,7 @@ namespace mariana { namespace onnx {
 #define KIdentity "Identity"
 
 extern std::set<std::string> CONTINUE_OP;
+extern std::map<std::string, std::string> ONNX_OP_MAP_TO_MAR;
 
 }} // namespace mariana::onnx
 

@@ -12,6 +12,7 @@
 #include <maro/transform_utils.h>
 #include <structure/ir.h>
 #include <core/utils/logging.h>
+#include <structure/funcs/ops.h>
 
 namespace mariana { namespace transform {
 
@@ -93,7 +94,7 @@ Status base_fold_reshape_to_node(Graph& graph) {
     replace_matching_optypes(graph,
                              {"*",
                                  {
-                                     {"Reshape", {{"*"}}}
+                                     {MRESHAPE, {{"*"}}}
                                  }
                              }, func, &replaced_graph);
     graph = replaced_graph;

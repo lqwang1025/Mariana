@@ -28,15 +28,15 @@ namespace mariana {
                              __##identity##_make)
 
 void register_funcs() {
-    ADD_FUNC(Conv, ConvFunction);
-    ADD_FUNC(Relu, ActivationFunction);
-    ADD_FUNC(Softmax, ActivationFunction);
-    ADD_FUNC(Reshape, ReshapeFunction);
-    ADD_FUNC(MaxPool, PoolFunction);
-    ADD_FUNC(GlobalAveragePool, PoolFunction);
-    ADD_FUNC(Add, AddFunction);
-    ADD_FUNC(Gemm, GemmFunction);
-    ADD_FUNC(Flatten, FlattenFunction);
+    ADD_FUNC(CONV2D, ConvFunction);
+    ADD_FUNC(RELU, ActivationFunction);
+    ADD_FUNC(SOFTMAX, ActivationFunction);
+    ADD_FUNC(RESHAPE, ReshapeFunction);
+    ADD_FUNC(MAXPOOL, PoolFunction);
+    ADD_FUNC(GAVPOOL, PoolFunction);
+    ADD_FUNC(ADD, AddFunction);
+    ADD_FUNC(GEMM, GemmFunction);
+    ADD_FUNC(FLATTEN, FlattenFunction);
 }
 #undef ADD_FUNC
 

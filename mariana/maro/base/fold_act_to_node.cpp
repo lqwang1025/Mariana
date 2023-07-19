@@ -11,6 +11,7 @@
 
 #include <maro/transform_utils.h>
 #include <structure/ir.h>
+#include <structure/funcs/ops.h>
 
 namespace mariana { namespace transform {
 
@@ -28,7 +29,7 @@ Status base_fold_act_to_node(Graph& graph) {
         return absl::OkStatus();
     };
     replace_matching_optypes(graph,
-                             {"Relu",
+                             {"RELU",
                                  {
                                      {"*"}
                                  }

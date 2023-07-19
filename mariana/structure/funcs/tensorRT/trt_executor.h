@@ -21,6 +21,7 @@
 
 #include <structure/ir.h>
 #include <core/utils/status.h>
+#include <structure/funcs/ops.h>
 #include <structure/graph_exec.h>
 
 namespace mariana { namespace trt {
@@ -35,8 +36,8 @@ private:
     nvinfer1::ITensor* _add_tensor(const Shape& shape, const std::string& name, nvinfer1::DataType type);
     Status _build(const Graph& graph, const ExecContext& context);
     bool _add_convolution_node(const Node& node, const ExecContext& context);
-    // bool _add_act_node(const Node& node, const ExecContext& context);
-    // bool _add_pool_node(const Node& node, const ExecContext& context);
+    bool _add_act_node(const Node& node, const ExecContext& context);
+    bool _add_pool_node(const Node& node, const ExecContext& context);
     // bool _add_add_node(const Node& node, const ExecContext& context);
     
 private:
@@ -46,10 +47,11 @@ private:
     nvinfer1::ICudaEngine* engine_;
     nvinfer1::IExecutionContext* context_;
     std::unordered_map<std::string, TrtLayerMake> layer_make_map_ = {
-        {"Conv", &TensorRTEngine::_add_convolution_node},
-        // {"Relu", &TensorRTEngine::_add_act_node},
+        {MCONV2D, &TensorRTEngine::_add_convolution_node},
+        {MRELU, &TensorRTEngine::_add_act_node},
+        {MMAXPOOL, &TensorRTEngine::_add_pool_node},
         // {"SoftMax", &TensorRTEngine::_add_act_node},
-        // {"MaxPool", &TensorRTEngine::_add_pool_node},
+        
         // {"GlobalAveragePool", &TensorRTEngine::_add_pool_node},
         // {"Add", &TensorRTEngine::_add_add_node}
     };

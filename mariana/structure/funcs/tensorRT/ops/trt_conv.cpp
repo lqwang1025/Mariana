@@ -19,7 +19,6 @@ namespace mariana { namespace trt {
 bool TensorRTEngine::_add_convolution_node(const Node& node, const ExecContext& context) {
     std::cout<<"gfffffffffffffffffffffff"<<std::endl;
     NodeList inputs = node.inputs();
-    // std::cout<<"deug:"<<inputs[0]<<std::endl;
     std::cout<<"debug:"<<inputs.size()<<std::endl;
     nvinfer1::ITensor* itensor;
     if (inputs.size() == 0) {
@@ -28,10 +27,10 @@ bool TensorRTEngine::_add_convolution_node(const Node& node, const ExecContext& 
     } else if (inputs.size() == 1) {
         std::cout<<"de:"<<inputs[0]->name()<<std::endl;
         const Shape& ishape = inputs[0]->shapes()[0];
-        std::cout<<"de:"<<inputs[0]->shapes().size()<<std::endl;
+        std::cout<<"de:"<<inputs[0]->shapes()[0]<<std::endl;
         itensor = _add_tensor(ishape, inputs[0]->name(), nvinfer1::DataType::kFLOAT);
     } else {
-        MCHECK(false);
+        MLOG(FATAL)<<"Convolution support 1 input now!";
     }
     ConvFunction* func = static_cast<ConvFunction*>(node.op());
     
@@ -42,7 +41,7 @@ bool TensorRTEngine::_add_convolution_node(const Node& node, const ExecContext& 
         weight.count = weights[0].numel();
         weight.type = nvinfer1::DataType::kFLOAT;
     } else {
-        MCHECK(false);
+        MLOG(FATAL)<<"Convolution support weight data type float now!";
     }
     
     nvinfer1::Weights bias{nvinfer1::DataType::kFLOAT, nullptr, 0};
@@ -57,7 +56,7 @@ bool TensorRTEngine::_add_convolution_node(const Node& node, const ExecContext& 
     }
     nvinfer1::DimsHW kernel_size{func->option.kernel_shape[0], func->option.kernel_shape[1]};
     int oc = func->option.oc;
-    nvinfer1::IConvolutionLayer* layer = network_->addConvolution(*itensor, oc, kernel_size, weight, bias);
+    nvinfer1::IConvolutionLayer* layer = network_->addConvolutionNd(*itensor, oc, kernel_size, weight, bias);
 
     layer->setStride(nvinfer1::DimsHW(func->option.strides[0], func->option.strides[1]));
     layer->setPrePadding(nvinfer1::DimsHW(func->option.pads[0], func->option.pads[2]));

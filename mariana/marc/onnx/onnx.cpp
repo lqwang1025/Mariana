@@ -192,7 +192,10 @@ Graph* parse(const std::string& name) {
     register_funcs();
     for (const ::onnx::NodeProto& node : onnx_scope.graph_info.graph->node()) {
         OnnxConverter* convert = OnnxHolder::search(node.op_type());
-        Node& dst = graph->add_node(node.name(), node.op_type());
+        MCHECK(ONNX_OP_MAP_TO_MAR.count(node.op_type()))<<"Mar is not support :[OPTYPE:"
+                                                        <<node.op_type()<<"].";
+        const std::string& op_type = ONNX_OP_MAP_TO_MAR.at(node.op_type());
+        Node& dst = graph->add_node(node.name(), op_type);
         convert->run(node, dst, onnx_scope);
     }
 
