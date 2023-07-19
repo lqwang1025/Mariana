@@ -24,7 +24,7 @@ bool TensorRTEngine::_add_softmax_node(const Node& node, const ExecContext& cont
     
     nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
     nvinfer1::ISoftMaxLayer* layer = network_->addSoftMax(*itensor);
-    layer->setAxes(func->option.axis);
+    //layer->setAxes(func->option.axis);
     
     layer->setName(node.name().c_str());
     nvtensor_map_[node.name()] = layer->getOutput(0);

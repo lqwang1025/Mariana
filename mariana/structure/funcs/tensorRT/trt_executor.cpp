@@ -49,7 +49,9 @@ Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
             layer_make_map_[node->op_type()](this, *node, context);
         }
         if (node->outputs().size() == 0) { // set network outputs
-            network_->markOutput(*_get_itensor(node->name()));
+            nvinfer1::ITensor *tensor = _get_itensor(node->name());
+            tensor->setName(node->name().c_str());
+            network_->markOutput(*tensor);
         }
     }
     config_.reset(builder_->createBuilderConfig());
