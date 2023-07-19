@@ -1,5 +1,5 @@
 /*
- *        (C) COPYRIGHT LeiNao Limited.
+ *        (C) COPYRIGHT Daniel Limited.
  *             ALL RIGHTS RESERVED
  *
  * File       : core/impl/stride.cpp

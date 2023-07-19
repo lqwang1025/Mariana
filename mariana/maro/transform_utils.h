@@ -1,5 +1,5 @@
 /*
- *        (C) COPYRIGHT LeiNao Limited.
+ *        (C) COPYRIGHT Daniel Limited.
  *             ALL RIGHTS RESERVED
  *
  * File       : maro/transform_utils.h
