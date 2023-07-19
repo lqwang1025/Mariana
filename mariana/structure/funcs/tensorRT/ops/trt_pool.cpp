@@ -34,14 +34,14 @@ bool TensorRTEngine::_add_pool_node(const Node& node, const ExecContext& context
         }
     };
 
-    const Shape& ishape = inputs[0]->shapes()[0];
-    nvinfer1::ITensor* itensor = _add_tensor(ishape, inputs[0]->name(), nvinfer1::DataType::kFLOAT);
+    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
     nvinfer1::IPoolingLayer* layer = network_->addPoolingNd(*itensor, pool_type_chose(), kernel_size);
     layer->setStride(nvinfer1::DimsHW{func->option.strides[0], func->option.strides[1]});
     layer->setAverageCountExcludesPadding(false);
     layer->setPrePadding(nvinfer1::DimsHW(func->option.pads[0], func->option.pads[1]));
     layer->setPostPadding(nvinfer1::DimsHW(func->option.pads[2], func->option.pads[3]));
     layer->setName(node.name().c_str());
+    nvtensor_map_[node.name()] = layer->getOutput(0);
     return true;
 }
 

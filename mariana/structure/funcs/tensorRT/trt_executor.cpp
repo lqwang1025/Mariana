@@ -26,19 +26,36 @@ Status TensorRTEngine::pre_run(const Graph& graph, const ExecContext& context) {
     return _build(graph, context);
 }
 
-Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
-    builder_ = nvinfer1::createInferBuilder(gLogger);
-    const auto _explicit_batch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
-    network_ = builder_->createNetworkV2(_explicit_batch);
-    for (auto& node : graph.nodes()) {
-        std::cout<<"debug:"<<node->name()<<std::endl;
-        if (layer_make_map_.count(node->op_type()))
-            layer_make_map_[node->op_type()](this, *node, context);
+nvinfer1::ITensor* TensorRTEngine::_get_itensor(const std::string& iname) {
+    if (nvtensor_map_.count(iname)) {
+        return nvtensor_map_[iname];
+    } else {
+        MLOG(FATAL)<<"Can not find the input tensor:"<<iname<<" construct trt engine failed!!";
     }
+}
+
+Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
+    builder_.reset(nvinfer1::createInferBuilder(gLogger));
+    const auto _explicit_batch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+    network_.reset(builder_->createNetworkV2(_explicit_batch));
+    for (auto& it : context.ishapes) { // set network inputs
+        std::string itname = it.first+input_prefix_;
+        nvtensor_map_[itname] = _add_input(it.second, itname, nvinfer1::DataType::kFLOAT);
+    }
+    
+    for (auto& node : graph.nodes()) {
+        if (layer_make_map_.count(node->op_type())) {
+            layer_make_map_[node->op_type()](this, *node, context);
+        }
+        if (node->outputs().size() == 0) { // set network outputs
+            network_->markOutput(*_get_itensor(node->name()));
+        }
+    }
+    config_.reset(builder_->createBuilderConfig());
     return absl::OkStatus();
 }
 
-nvinfer1::ITensor* TensorRTEngine::_add_tensor(const Shape& shape, const std::string& name, nvinfer1::DataType type) {
+nvinfer1::ITensor* TensorRTEngine::_add_input(const Shape& shape, const std::string& name, nvinfer1::DataType type) {
     int32_t dim = shape.dims();
     nvinfer1::ITensor* trt_tensor;
     switch (dim) {

@@ -33,6 +33,7 @@ void register_converter() {
     ADD_CONVERT(Transpose, TransposeConverter);
     ADD_CONVERT(Relu, ActConverter);
     ADD_CONVERT(Gemm, GemmConverter);
+    ADD_CONVERT(Softmax, SoftmaxConverter);
 }
 #undef ADD_CONVERT
 

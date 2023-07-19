@@ -19,6 +19,7 @@
 #include <structure/funcs/add.h>
 #include <structure/funcs/flatten.h>
 #include <structure/funcs/reshape.h>
+#include <structure/funcs/softmax.h>
 
 namespace mariana {
 
@@ -30,7 +31,7 @@ namespace mariana {
 void register_funcs() {
     ADD_FUNC(CONV2D, ConvFunction);
     ADD_FUNC(RELU, ActivationFunction);
-    ADD_FUNC(SOFTMAX, ActivationFunction);
+    ADD_FUNC(SOFTMAX, SoftmaxFunction);
     ADD_FUNC(RESHAPE, ReshapeFunction);
     ADD_FUNC(MAXPOOL, PoolFunction);
     ADD_FUNC(GAVPOOL, PoolFunction);

@@ -1,22 +1,22 @@
 /*
- *        (C) COPYRIGHT Daniel Limited.
+ *        (C) COPYRIGHT Daniel Wang Limited.
  *             ALL RIGHTS RESERVED
  *
- * File       : trt_conv.cpp
- * Authors    : wangliquan@zkln
- * Create Time: 2023-01-05:15:43:50
+ * File       : trt_fc.cpp
+ * Authors    : wangliquan@cc-SYS-7048GR-TR
+ * Create Time: 2023-07-19:16:43:22
  * Description:
  * 
  */
 
 #include <structure/funcs/tensorRT/trt_executor.h>
 #include <core/utils/logging.h>
-#include <structure/funcs/conv.h>
+#include <structure/funcs/gemm.h>
 #include <structure/tensor.h>
 
 namespace mariana { namespace trt {
 
-bool TensorRTEngine::_add_convolution_node(const Node& node, const ExecContext& context) {
+bool TensorRTEngine::_add_fc_node(const Node& node, const ExecContext& context) {
     NodeList inputs = node.inputs();
     MCHECK(inputs.size()<2)<<node.op_type()<<" support 1 input only.";
     
@@ -27,7 +27,7 @@ bool TensorRTEngine::_add_convolution_node(const Node& node, const ExecContext& 
         itname = inputs[0]->name();
     }
     nvinfer1::ITensor* itensor = _get_itensor(itname);
-    ConvFunction* func = static_cast<ConvFunction*>(node.op());
+    GemmFunction* func = static_cast<GemmFunction*>(node.op());
     
     const std::vector<Tensor>& weights = func->option.weights;
     nvinfer1::Weights weight{nvinfer1::DataType::kFLOAT, nullptr, 0};
@@ -49,15 +49,9 @@ bool TensorRTEngine::_add_convolution_node(const Node& node, const ExecContext& 
             MCHECK(false);
         }
     }
-    nvinfer1::DimsHW kernel_size{func->option.kernel_shape[0], func->option.kernel_shape[1]};
-    int oc = func->option.oc;
-    nvinfer1::IConvolutionLayer* layer = network_->addConvolutionNd(*itensor, oc, kernel_size, weight, bias);
-
-    layer->setStride(nvinfer1::DimsHW(func->option.strides[0], func->option.strides[1]));
-    layer->setPrePadding(nvinfer1::DimsHW(func->option.pads[0], func->option.pads[2]));
-    layer->setPostPadding(nvinfer1::DimsHW(func->option.pads[1], func->option.pads[3]));
-    layer->setDilation(nvinfer1::DimsHW(func->option.dilations[0], func->option.dilations[1]));
-    layer->setNbGroups(func->option.group);
+    int oc = weights[0].shape()[0];
+    std::cout<<"dd:"<<weights[0].shape()<<std::endl;
+    nvinfer1::IFullyConnectedLayer* layer = network_->addFullyConnected(*itensor, oc, weight, bias);
 
     layer->setName(node.name().c_str());
     nvtensor_map_[node.name()] = layer->getOutput(0);

@@ -15,9 +15,10 @@
 #include <NvInfer.h>
 
 #include <map>
+#include <string>
 #include <functional>
 #include <unordered_map>
-#include <string>
+#include <memory>
 
 #include <structure/ir.h>
 #include <core/utils/status.h>
@@ -33,28 +34,36 @@ public:
     ~TensorRTEngine() = default;
     Status pre_run(const Graph& graph, const ExecContext& context);
 private:
-    nvinfer1::ITensor* _add_tensor(const Shape& shape, const std::string& name, nvinfer1::DataType type);
+    nvinfer1::ITensor* _get_itensor(const std::string& iname);
+    nvinfer1::ITensor* _add_input(const Shape& shape, const std::string& name, nvinfer1::DataType type);
     Status _build(const Graph& graph, const ExecContext& context);
     bool _add_convolution_node(const Node& node, const ExecContext& context);
     bool _add_act_node(const Node& node, const ExecContext& context);
     bool _add_pool_node(const Node& node, const ExecContext& context);
-    // bool _add_add_node(const Node& node, const ExecContext& context);
+    bool _add_eltwise_node(const Node& node, const ExecContext& context);
+    bool _add_reshape_node(const Node& node, const ExecContext& context);
+    bool _add_softmax_node(const Node& node, const ExecContext& context);
+    bool _add_fc_node(const Node& node, const ExecContext& context);
     
 private:
-    nvinfer1::IBuilder* builder_;
-    nvinfer1::INetworkDefinition* network_;
-    nvinfer1::IBuilderConfig* config_;
-    nvinfer1::ICudaEngine* engine_;
-    nvinfer1::IExecutionContext* context_;
+    const std::string input_prefix_ = "_minput";
+    std::unique_ptr<nvinfer1::IBuilder> builder_ = nullptr;
+    std::unique_ptr<nvinfer1::INetworkDefinition> network_ = nullptr;
+    std::unique_ptr<nvinfer1::IBuilderConfig> config_ = nullptr;
+    std::unique_ptr<nvinfer1::ICudaEngine> engine_ = nullptr;
+    std::unique_ptr<nvinfer1::IExecutionContext> context_ = nullptr;
     std::unordered_map<std::string, TrtLayerMake> layer_make_map_ = {
         {MCONV2D, &TensorRTEngine::_add_convolution_node},
         {MRELU, &TensorRTEngine::_add_act_node},
         {MMAXPOOL, &TensorRTEngine::_add_pool_node},
-        // {"SoftMax", &TensorRTEngine::_add_act_node},
+        {MADD, &TensorRTEngine::_add_eltwise_node},
+        {MGAVPOOL, &TensorRTEngine::_add_pool_node},
+        {MRESHAPE, &TensorRTEngine::_add_reshape_node},
+        {MSOFTMAX, &TensorRTEngine::_add_softmax_node},
+        {MGEMM, &TensorRTEngine::_add_fc_node},
         
-        // {"GlobalAveragePool", &TensorRTEngine::_add_pool_node},
-        // {"Add", &TensorRTEngine::_add_add_node}
     };
+    std::unordered_map<std::string, nvinfer1::ITensor*> nvtensor_map_;
 };
 
 }} // namespace mariana::trt
