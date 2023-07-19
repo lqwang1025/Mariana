@@ -32,15 +32,9 @@ Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
     network_ = builder_->createNetworkV2(_explicit_batch);
     for (auto& node : graph.nodes()) {
         std::cout<<"debug:"<<node->name()<<std::endl;
-        for (auto& input : node->inputs()) {
-            std::cout<<"------>input:"<<input->name()<<std::endl;
-        }
+        if (layer_make_map_.count(node->op_type()))
+            layer_make_map_[node->op_type()](this, *node, context);
     }
-    // for (auto& node : graph.nodes()) {
-    //     std::cout<<"debug:"<<node->name()<<std::endl;
-    //     if (layer_make_map_.count(node->op_type()))
-    //         layer_make_map_[node->op_type()](this, *node, context);
-    // }
     return absl::OkStatus();
 }
 

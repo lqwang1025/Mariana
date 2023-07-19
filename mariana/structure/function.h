@@ -28,8 +28,8 @@ using ShapeList = std::vector<Shape>;
 
 struct Function {
     Function() : next_(nullptr) {}
-    virtual ~Function() {std::cout<<"func delete"<<std::endl;}
-    void set_next(std::shared_ptr<Function> next) {
+    virtual ~Function() {}
+    void set_next(Function* next) {
         next_ = next;
     }
 
@@ -45,7 +45,7 @@ struct Function {
     virtual ShapeList infer_shape(ShapeList shapes)=0;
     virtual float compute_FLOPs(ShapeList oshapes);
 protected:
-    std::shared_ptr<Function> next_;
+    Function* next_ = nullptr;
 };
 
 class FunctionHolder final {

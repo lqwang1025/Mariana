@@ -11,6 +11,7 @@
 
 #include <maro/transform_utils.h>
 #include <structure/ir.h>
+#include <core/utils/logging.h>
 
 namespace mariana { namespace transform {
 
@@ -28,7 +29,7 @@ Status base_fold_reshape_to_node(Graph& graph) {
     auto func = [](Scope& scope, const NodeMatch& match,
                    std::set<std::string>* old_nodes,
                    std::vector<std::shared_ptr<Node>>* new_nodes) -> Status {
-        std::cout<<"Match:"<<match.debug_string()<<std::endl;
+        MVLOG(2)<<"Match:"<<match.debug_string();
         const Node& any_node = match.node;
         const Node& reshape_node = match.inputs[0].node;
         const Node& reshape_inode = match.inputs[0].inputs[0].node;
@@ -67,13 +68,10 @@ Status base_fold_reshape_to_node(Graph& graph) {
          *  build link for:  new_inode  
          *                    
          */
-        std::cout<<"new inode:"<<new_inode.get()<<std::endl;
         for (auto& input : new_inode->inputs()) {
             for (size_t i = 0; i < input->outputs().size(); ++i) {
                 if (input->outputs()[i]->name() == new_inode->name()) {
-                    std::cout<<"sssssssssssssssss:"<<input<<"  "<<input->outputs()[i]<<std::endl;
                     input->update_output(new_inode.get(), i);
-                    std::cout<<"sssssssssssssssss:"<<input<<"  "<<input->outputs()[i]<<std::endl;
                     break;
                 }
             }
