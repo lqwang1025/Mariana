@@ -50,7 +50,6 @@ bool TensorRTEngine::_add_fc_node(const Node& node, const ExecContext& context) 
         }
     }
     int oc = weights[0].shape()[0];
-    std::cout<<"dd:"<<weights[0].shape()<<std::endl;
     nvinfer1::IFullyConnectedLayer* layer = network_->addFullyConnected(*itensor, oc, weight, bias);
 
     layer->setName(node.name().c_str());

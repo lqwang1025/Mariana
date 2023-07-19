@@ -29,6 +29,7 @@ bool TensorRTEngine::_add_reshape_node(const Node& node, const ExecContext& cont
     for (size_t i = 0; i < dims.nbDims; ++i) {
         dims.d[i] = func->option.shape[i];
     }
+    std::cout<<"ss:"<<node.shapes()[0]<<std::endl;
     layer->setReshapeDimensions(dims);
     layer->setName(node.name().c_str());
     nvtensor_map_[node.name()] = layer->getOutput(0);
