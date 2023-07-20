@@ -19,11 +19,11 @@ namespace mariana { namespace onnx {
                                  std::move(new type{}))
 void register_converter() {
     ADD_CONVERT(Default, DefaultConverter);
-    ADD_CONVERT(Add, AddConverter);
+    ADD_CONVERT(Add, MathConverter);
+    ADD_CONVERT(Mul, MathConverter);
     ADD_CONVERT(Concat, ConcatConverter);
     ADD_CONVERT(MaxPool, PoolConverter);
     ADD_CONVERT(GlobalAveragePool, PoolConverter);
-    ADD_CONVERT(Mul, MulConverter);
     ADD_CONVERT(Pow, PowConverter);
     ADD_CONVERT(Conv, ConvConverter);
     ADD_CONVERT(Reshape, ReshapeConverter);

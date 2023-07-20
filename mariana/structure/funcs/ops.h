@@ -18,15 +18,21 @@
 namespace mariana {
 
 #define MCONV2D "CONV2D"
-#define MRELU "RELU"
 #define MSOFTMAX "SOFTMAX"
 #define MRESHAPE "RESHAPE"
 #define MMAXPOOL "MAXPOOL"
 #define MGAVPOOL "GAVPOOL"
-#define MADD "ADD"
 #define MGEMM "GEMM"
 #define MFLATTEN "FLATTEN"
 
+//Math op
+#define MADD "ADD"
+#define MMUL "MUL"
+
+// Activation op
+#define MRELU "RELU"
+#define MSIGMOID "SIGMOID"
+    
 static std::set<std::string> ACTIVATION_OP = {MRELU};
 
 } // namespace mariana

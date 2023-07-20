@@ -26,7 +26,9 @@ std::map<std::string, std::string> ONNX_OP_MAP_TO_MAR = {
     {KAdd, MADD},
     {KGlobalAveragePool, MGAVPOOL},
     {KFlatten, MFLATTEN},
-    {KGemm, MGEMM}
+    {KGemm, MGEMM},
+    {KSigmoid, MSIGMOID},
+    {KMul, MMUL},
 };
 
 }} // namespace mariana::onnx

@@ -11,7 +11,7 @@
 
 #include <structure/funcs/tensorRT/trt_executor.h>
 #include <core/utils/logging.h>
-#include <structure/funcs/add.h>
+#include <structure/funcs/math.h>
 #include <structure/funcs/ops.h>
 #include <structure/tensor.h>
 

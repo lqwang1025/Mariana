@@ -20,11 +20,11 @@ void register_converter();
 
 void unregister_converter();
 
-DECLARE_ONNX_CONVERTER_CLASS(AddConverter);
+DECLARE_ONNX_CONVERTER_CLASS(DefaultConverter);
+DECLARE_ONNX_CONVERTER_CLASS(MathConverter);
 DECLARE_ONNX_CONVERTER_CLASS(ConcatConverter);
 DECLARE_ONNX_CONVERTER_CLASS(ConvConverter);
 DECLARE_ONNX_CONVERTER_CLASS(PoolConverter);
-DECLARE_ONNX_CONVERTER_CLASS(MulConverter);
 DECLARE_ONNX_CONVERTER_CLASS(PowConverter);
 DECLARE_ONNX_CONVERTER_CLASS(ReshapeConverter);
 DECLARE_ONNX_CONVERTER_CLASS(ResizeConverter);
@@ -33,7 +33,6 @@ DECLARE_ONNX_CONVERTER_CLASS(TransposeConverter);
 DECLARE_ONNX_CONVERTER_CLASS(ActConverter);
 DECLARE_ONNX_CONVERTER_CLASS(GemmConverter);
 DECLARE_ONNX_CONVERTER_CLASS(SoftmaxConverter);
-DECLARE_ONNX_CONVERTER_CLASS(DefaultConverter);
 
 }} // namespace mariana::onnx
 

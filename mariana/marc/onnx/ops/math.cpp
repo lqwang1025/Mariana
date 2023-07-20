@@ -2,9 +2,9 @@
  *        (C) COPYRIGHT Daniel Limited.
  *             ALL RIGHTS RESERVED
  *
- * File       : mul.cpp
+ * File       : marc/onnx/ops/math.cpp
  * Authors    : wangliquan@zkln
- * Create Time: 2022-12-27:16:51:45
+ * Create Time: 2022-12-27:16:51:11
  * Description:
  * 
  */
@@ -13,9 +13,7 @@
 
 namespace mariana { namespace onnx {
 
-void MulConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
-    
+void MathConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
 }
 
 }} // namespace mariana::onnx
-
