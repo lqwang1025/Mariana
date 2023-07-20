@@ -27,6 +27,8 @@
 
 namespace mariana { namespace trt {
 
+// There are two ways to build a TRT engine:
+//   one is to build NetWork directly, and the other is to build it through TRT's APIs.
 class TensorRTEngine {
 public:
     using TrtLayerMake = std::function<bool(TensorRTEngine*, const Node&, const ExecContext&)>;
@@ -34,9 +36,13 @@ public:
     ~TensorRTEngine() = default;
     Status pre_run(const Graph& graph, const ExecContext& context);
 private:
+    void _setup_optimize(const ExecContext& context);
     nvinfer1::ITensor* _get_itensor(const std::string& iname);
     nvinfer1::ITensor* _add_input(const Shape& shape, const std::string& name, nvinfer1::DataType type);
     Status _build(const Graph& graph, const ExecContext& context);
+    Status _construct_network(const Graph& graph, const ExecContext& context);
+    Status _from_other_convert_network(const Graph& graph, const ExecContext& context);
+private:    
     bool _add_convolution_node(const Node& node, const ExecContext& context);
     bool _add_act_node(const Node& node, const ExecContext& context);
     bool _add_pool_node(const Node& node, const ExecContext& context);

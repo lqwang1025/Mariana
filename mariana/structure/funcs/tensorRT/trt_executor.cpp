@@ -35,10 +35,7 @@ nvinfer1::ITensor* TensorRTEngine::_get_itensor(const std::string& iname) {
     }
 }
 
-Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
-    builder_.reset(nvinfer1::createInferBuilder(gLogger));
-    const auto _explicit_batch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
-    network_.reset(builder_->createNetworkV2(_explicit_batch));
+Status TensorRTEngine::_construct_network(const Graph& graph, const ExecContext& context) {
     for (auto& it : context.ishapes) { // set network inputs
         std::string itname = it.first+input_prefix_;
         nvtensor_map_[itname] = _add_input(it.second, itname, nvinfer1::DataType::kFLOAT);
@@ -54,9 +51,26 @@ Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
             network_->markOutput(*tensor);
         }
     }
+    return absl::OkStatus();
+}
+
+Status TensorRTEngine::_from_other_convert_network(const Graph& graph, const ExecContext& context) {
+    return absl::OkStatus();
+}
+
+void TensorRTEngine::_setup_optimize(const ExecContext& context) {
     config_.reset(builder_->createBuilderConfig());
     config_->setMaxWorkspaceSize(16_MiB);
     config_->setFlag(nvinfer1::BuilderFlag::kFP16);
+}
+
+Status TensorRTEngine::_build(const Graph& graph, const ExecContext& context) {
+    builder_.reset(nvinfer1::createInferBuilder(gLogger));
+    const auto _explicit_batch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+    network_.reset(builder_->createNetworkV2(_explicit_batch));
+    _construct_network(graph, context); // TODO: 1 or 2 
+    _setup_optimize(context);
+    
     nvinfer1::IHostMemory* hm = builder_->buildSerializedNetwork(*network_, *config_);
     std::ofstream serialize_output_stream;
     serialize_output_stream.open("./serialize_engine_output.trt", std::ios::out|std::ios::binary);
