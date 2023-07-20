@@ -50,7 +50,7 @@ Status fold_identity_to_conv(OnnxScope& scope) {
             }
         }
     } while (job);
-    scope.save("fold_identity_to_conv.onnx");
+    // scope.save("fold_identity_to_conv.onnx");
     return absl::OkStatus();
 }
 

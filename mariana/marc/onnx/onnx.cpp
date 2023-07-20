@@ -79,18 +79,18 @@ static void _sort_by_execution_order(const ::onnx::GraphProto& input_graph,
     if (__nodes_info.empty()) return;
     size_t node_size = input_graph.node_size();
     for (size_t i = 0; i < node_size; ++i) {
-        if (visited.count(input_graph.node(i).name()) == 1) continue;
-        if (__nodes_info[input_graph.node(i).name()].nodes.size() == 0) { // input
+        const std::string& node_name = input_graph.node(i).name();
+        if (visited.count(node_name) == 1) continue;
+        if (__nodes_info.at(node_name).nodes.size() == 0) { // input
             nodes.push_back(&input_graph.node(i));
-            visited.insert(input_graph.node(i).name());
-            __nodes_info.erase(input_graph.node(i).name());
+            visited.insert(node_name);
+            __nodes_info.erase(node_name);
             
             for (auto& it : __nodes_info) {
-                for (size_t _i = 0; _i < it.second.nodes.size(); ++_i) {
-                    if (it.second.nodes[_i] == &input_graph.node(i) ||
-                        it.second.nodes[_i]->name() == input_graph.node(i).name()) {
-                        it.second.nodes.erase(it.second.nodes.begin()+_i);
-                        break;
+                for (auto iter = it.second.nodes.begin(); iter != it.second.nodes.end(); ++iter) {
+                    if (*iter == &input_graph.node(i) || (*iter)->name() == node_name) {
+                        iter = it.second.nodes.erase(iter);
+                        iter--;
                     }
                 }
             }
