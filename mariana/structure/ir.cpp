@@ -54,15 +54,15 @@ static void _sort_by_exe_order(const Graph *graph, NodeInputs& node_in,
     size_t node_size = graph->num_of_nodes();
     for (size_t i = 0; i < node_size; ++i) {
         if (visited.count(graph->nodes(i)->name()) == 1) continue;
-        if (node_in[graph->nodes(i)->name()].size() == 0) { // input node
+        if (node_in.at(graph->nodes(i)->name()).size() == 0) { // input node
             order_nodes.push_back(graph->nodes(i));
             visited.insert(graph->nodes(i)->name());
             node_in.erase(graph->nodes(i)->name());
             for (auto& it : node_in) {
-                for (size_t _i = 0; _i < it.second.size(); ++_i) {
-                    if (it.second[_i] == graph->nodes(i)->name()) {
-                        it.second.erase(it.second.begin()+_i);
-                        break;
+                for (auto iter = it.second.begin(); iter != it.second.end(); ++iter) {
+                    if (*iter == graph->nodes(i)->name()) {
+                        iter = it.second.erase(iter);
+                        iter--;
                     }
                 }
             }

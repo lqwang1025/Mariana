@@ -25,7 +25,11 @@ namespace mariana { namespace onnx {
 #define KGlobalAveragePool "GlobalAveragePool"
 #define KFlatten "Flatten"
 #define KGemm "Gemm"
-
+#define KSplit "Split"
+#define KConcat "Concat"
+#define KResize "Resize"
+#define KTranspose "Transpose"
+        
 // Math node
 #define KAdd "Add"
 #define KMul "Mul"

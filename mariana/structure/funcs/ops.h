@@ -24,6 +24,10 @@ namespace mariana {
 #define MGAVPOOL "GAVPOOL"
 #define MGEMM "GEMM"
 #define MFLATTEN "FLATTEN"
+#define MSPLIT "SPLIT"
+#define MCONCAT "CONCAT"
+#define MRESIZE "RESIZE"
+#define MPERMUTE "PERMUTE"
 
 //Math op
 #define MADD "ADD"
@@ -33,7 +37,7 @@ namespace mariana {
 #define MRELU "RELU"
 #define MSIGMOID "SIGMOID"
     
-static std::set<std::string> ACTIVATION_OP = {MRELU};
+static std::set<std::string> ACTIVATION_OP = {MRELU, MSIGMOID};
 
 } // namespace mariana
 

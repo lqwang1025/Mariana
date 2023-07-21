@@ -29,6 +29,10 @@ std::map<std::string, std::string> ONNX_OP_MAP_TO_MAR = {
     {KGemm, MGEMM},
     {KSigmoid, MSIGMOID},
     {KMul, MMUL},
+    {KSplit, MSPLIT},
+    {KConcat, MCONCAT},
+    {KResize, MRESIZE},
+    {KTranspose, MPERMUTE},
 };
 
 }} // namespace mariana::onnx

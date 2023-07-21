@@ -20,6 +20,10 @@
 #include <structure/funcs/flatten.h>
 #include <structure/funcs/reshape.h>
 #include <structure/funcs/softmax.h>
+#include <structure/funcs/split.h>
+#include <structure/funcs/concat.h>
+#include <structure/funcs/resize.h>
+#include <structure/funcs/permute.h>
 
 namespace mariana {
 
@@ -40,6 +44,10 @@ void register_funcs() {
     ADD_FUNC(MUL, MathFunction);
     ADD_FUNC(GEMM, GemmFunction);
     ADD_FUNC(FLATTEN, FlattenFunction);
+    ADD_FUNC(SPLIT, SplitFunction);
+    ADD_FUNC(CONCAT, ConcatFunction);
+    ADD_FUNC(RESIZE, ResizeFunction);
+    ADD_FUNC(PERMUTE, PermuteFunction);
 }
 #undef ADD_FUNC
 
