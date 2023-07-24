@@ -9,3 +9,4 @@ if(GIT_FOUND)
     WORKING_DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
+string(TIMESTAMP COMPILE_TIME %Y-%m-%d_%H:%M:%S)

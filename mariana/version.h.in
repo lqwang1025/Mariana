@@ -18,6 +18,7 @@ namespace mariana {
 
 const std::string GIT_HASH = "@GIT_HASH@";
 const std::string BUILD_VERSION = "@MARIANA_TARGET_VERSION@";
+const std::string BUILD_TIMING = "@COMPILE_TIME@";
 
 } // namespace mariana
 
