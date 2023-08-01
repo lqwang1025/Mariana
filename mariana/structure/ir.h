@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include <structure/function.h>
+#include <structure/engine.h>
 #include <core/utils/arrary_ref.h>
 #include <core/macros/macros.h>
 #include <core/impl/shape.h>
@@ -207,6 +208,9 @@ public:
     Graph() {
         nodes_.clear();
     }
+    Graph(std::shared_ptr<Engine> engine) : engine_(engine) {
+        nodes_.clear();
+    }
     ~Graph() {
         nodes_.clear();
     }
@@ -241,6 +245,7 @@ public:
         return nodes_[i];
     }
 private:
+    std::shared_ptr<Engine> engine_ = nullptr;
     std::vector<std::shared_ptr<Node>> nodes_;
     std::string name_ = "";
 };

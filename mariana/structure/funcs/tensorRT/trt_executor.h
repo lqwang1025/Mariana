@@ -21,35 +21,37 @@
 #include <memory>
 
 #include <structure/ir.h>
+#include <structure/engine.h>
 #include <core/utils/status.h>
 #include <structure/funcs/ops.h>
 #include <structure/graph_exec.h>
+#include <structure/tensor.h>
 
 namespace mariana { namespace trt {
 
 // There are two ways to build a TRT engine:
 //   one is to build NetWork directly, and the other is to build it through TRT's APIs.
-class TensorRTEngine {
+class TensorRTEngine : public ::mariana::Engine {
 public:
-    using TrtLayerMake = std::function<bool(TensorRTEngine*, const Node&, const ExecContext&)>;
+    using TrtLayerMake = std::function<bool(TensorRTEngine*, const Node&, const ConvertContext&)>;
     TensorRTEngine();
-    ~TensorRTEngine() = default;
-    Status pre_run(const Graph& graph, const ExecContext& context);
+    ~TensorRTEngine();
+    Status build_external(Graph& graph, const ConvertContext& context) override;
+    Status build_internal(Graph& graph, const ConvertContext& context) override;
+    Status de_serialize(Graph& graph, const ConvertContext& context) override;
 private:
-    void _setup_optimize(const ExecContext& context);
+    void _setup_optimize(const ConvertContext& context);
     nvinfer1::ITensor* _get_itensor(const std::string& iname);
     nvinfer1::ITensor* _add_input(const Shape& shape, const std::string& name, nvinfer1::DataType type);
-    Status _build(const Graph& graph, const ExecContext& context);
-    Status _construct_network(const Graph& graph, const ExecContext& context);
-    Status _from_other_convert_network(const Graph& graph, const ExecContext& context);
+    Status _construct_network(Graph& graph, const ConvertContext& context);
 private:    
-    bool _add_convolution_node(const Node& node, const ExecContext& context);
-    bool _add_act_node(const Node& node, const ExecContext& context);
-    bool _add_pool_node(const Node& node, const ExecContext& context);
-    bool _add_eltwise_node(const Node& node, const ExecContext& context);
-    bool _add_reshape_node(const Node& node, const ExecContext& context);
-    bool _add_softmax_node(const Node& node, const ExecContext& context);
-    bool _add_fc_node(const Node& node, const ExecContext& context);
+    bool _add_convolution_node(const Node& node, const ConvertContext& context);
+    bool _add_act_node(const Node& node, const ConvertContext& context);
+    bool _add_pool_node(const Node& node, const ConvertContext& context);
+    bool _add_eltwise_node(const Node& node, const ConvertContext& context);
+    bool _add_reshape_node(const Node& node, const ConvertContext& context);
+    bool _add_softmax_node(const Node& node, const ConvertContext& context);
+    bool _add_fc_node(const Node& node, const ConvertContext& context);
     
 private:
     const std::string input_prefix_ = "_minput";
@@ -58,6 +60,7 @@ private:
     std::unique_ptr<nvinfer1::IBuilderConfig> config_ = nullptr;
     std::unique_ptr<nvinfer1::ICudaEngine> engine_ = nullptr;
     std::unique_ptr<nvinfer1::IExecutionContext> context_ = nullptr;
+    cudaStream_t stream_;
     std::unordered_map<std::string, TrtLayerMake> layer_make_map_ = {
         {MCONV2D, &TensorRTEngine::_add_convolution_node},
         {MRELU, &TensorRTEngine::_add_act_node},
@@ -69,6 +72,8 @@ private:
         {MGEMM, &TensorRTEngine::_add_fc_node},
         
     };
+    std::vector<Tensor> itensors_;
+    std::vector<Tensor> otensors_;
     std::unordered_map<std::string, nvinfer1::ITensor*> nvtensor_map_;
 };
 

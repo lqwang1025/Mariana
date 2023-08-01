@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21.0)
+cmake_minimum_required(VERSION 3.20.0)
 IF (NOT DEFINED CMAKE_INSTALL_PREFIX)
   SET (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Mariana Installation Directory")
 ENDIF()
@@ -27,7 +27,7 @@ include(cmake/instruction.cmake)
 configure_file(version.h.in generated/version.h @ONLY)
 configure_file(config.h.in generated/config.h @ONLY)
 
-message(STATUS "Build info Git hash:${GIT_HASH} Version:${MARIANA_TARGET_VERSION}")
+message(STATUS "Build info Git hash:${GIT_HASH} Version:${MARIANA_TARGET_VERSION} Timing:${COMPILE_TIME}")
 
 include(GNUInstallDirs)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -59,8 +59,8 @@ add_library(${CMAKE_PROJECT_NAME} SHARED)
 target_sources(${CMAKE_PROJECT_NAME}-static PUBLIC ${MARIANA_SRC})
 target_sources(${CMAKE_PROJECT_NAME} PUBLIC ${MARIANA_SRC})
 
-target_link_libraries(${CMAKE_PROJECT_NAME}-static PUBLIC -lglog -labsl -lpthread -lprotobuf nvinfer)
-target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC -lglog -labsl -lpthread -lprotobuf nvinfer)
+target_link_libraries(${CMAKE_PROJECT_NAME}-static PUBLIC -lglog -labsl -lpthread -lprotobuf ${TRT_LIBRARY} ${CUDA_CUDART_LIBRARY})
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC -lglog -labsl -lpthread -lprotobuf ${TRT_LIBRARY} ${CUDA_CUDART_LIBRARY})
 
 set_target_properties(${CMAKE_PROJECT_NAME}-static PROPERTIES VERSION ${MARIANA_TARGET_VERSION} SOVERSION ${MARIANA_TARGET_SOVERSION})
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES VERSION ${MARIANA_TARGET_VERSION} SOVERSION ${MARIANA_TARGET_SOVERSION})

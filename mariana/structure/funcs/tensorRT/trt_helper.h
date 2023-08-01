@@ -12,6 +12,8 @@
 #ifndef __STRUCTURE_FUNCS_TENSORRT_TRT_HELPER_H__
 #define __STRUCTURE_FUNCS_TENSORRT_TRT_HELPER_H__
 
+#include <NvInfer.h>
+
 namespace mariana { namespace trt {
 
 constexpr long double operator"" _GiB(long double val) {
@@ -40,6 +42,7 @@ constexpr long long int operator"" _KiB(long long unsigned int val) {
     return val * (1 << 10);
 }
 
+void print_trt_network(const nvinfer1::INetworkDefinition& network);
 
 }} // namespace mariana::trt
 

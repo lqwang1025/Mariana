@@ -17,7 +17,7 @@
 
 namespace mariana { namespace trt {
 
-bool TensorRTEngine::_add_act_node(const Node& node, const ExecContext& context) {
+bool TensorRTEngine::_add_act_node(const Node& node, const ConvertContext& context) {
     NodeList inputs = node.inputs();
     MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
     nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());

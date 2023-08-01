@@ -1,5 +1,5 @@
 /*
- *        (C) COPYRIGHT LeiNao Limited.
+ *        (C) COPYRIGHT Daniel Limited.
  *             ALL RIGHTS RESERVED
  *
  * File       : app.cpp
@@ -13,27 +13,33 @@
 #include <marc/marc.h>
 #include <structure/funcs/tensorRT/trt_executor.h>
 #include <structure/graph_exec.h>
-#include <maro/transform_utils.h>
+#include <maro/transform.h>
+#include <structure/tensor.h>
 
 int main() {
-    // mariana::TensorImpl t;
-    // t.set_shape({1,3,224, 224});
-    // std::cout<<"debug:"<<t.shape()<<" "<<t.stride()<<std::endl;
-    // float* s = t.mutable_data<float>();
-    // mariana::get_cpu_allocator()->allocate(1024);
-    mariana::Graph* graph = mariana::parse("/home/home/lqwang/project/Mariana/mariana/build/res.onnx");
-    mariana::ExecContext context;
-    context.ishapes.insert({"Conv_0", {1, 3, 224, 224}});
-
-    std::cout<<"prerun"<<std::endl;
+    mariana::ConvertContext ccontext;
+    ccontext.ishapes.insert({"Conv_0", {1, 3, 640, 640}});
+    ccontext.model_path = "serialize_engine_output.plan";
+    ccontext.back_end   = mariana::Backend::TRT;
+    mariana::Graph* graph = mariana::parse(ccontext);
+    // mariana::Tensor t(mariana::DeviceType::CUDA);
+    // t.set_shape({1,3,224,224});
+    // float* ptr = t.mutable_data<float>();
+    // std::cout<<"d:"<<t.device()<<" "<<ptr<<"\n";
+    // mariana::Tensor t1 = t.cpu();
+    // float* ptr1 = t1.mutable_data<float>();
+    // std::cout<<"d:"<<t1.device()<<" "<<ptr1<<"\n";
+    // mariana::ExecContext context;
+    // context.ishapes.insert({"Conv_0", {1, 3, 224, 224}});
+    // context.model_path = "yolov8l_silu.onnx";
+    // std::cout<<"prerun"<<std::endl;
     
-    mariana::GraphExec ge;
-    ge.pre_run(*graph, context);
+    // mariana::GraphExec ge;
+    // ge.pre_run(*graph, context);
 
-    std::cout<<"optttttttt"<<std::endl;
-    mariana::transform::TransformRegistry* opt = mariana::transform::get_transform_registry();
-    (*opt)["base_fold_reshape_to_node"](*graph);
-    mariana::trt::TensorRTEngine trt{};
-    trt.pre_run(*graph, context);
+    // mariana::transform::transform(graph, {"base_fold_reshape_to_node"});
+    // mariana::trt::TensorRTEngine trt{};
+    // trt.pre_run(graph, context);
+    // std::cout<<"g:"<<graph<<std::endl;
     return 0;
 }

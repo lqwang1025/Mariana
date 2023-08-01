@@ -100,7 +100,9 @@ public:
         impl_ = rhs.impl_;
         return *this;
     }
-public:
+    Tensor cuda();
+    Tensor cpu();
+private:
     std::shared_ptr<TensorImpl> impl_;
 };
 
