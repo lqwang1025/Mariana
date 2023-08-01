@@ -40,7 +40,12 @@ public:
     void set_storage_offset(int64_t storage_offset) {
         impl_->set_storage_offset(storage_offset);
     }
-
+    void set_name(const std::string& name) {
+        impl_->set_name(name);
+    }
+    const std::string& name() const {
+        return impl_->name();
+    }
     Shape shape() const {
         return impl_->shape();
     }

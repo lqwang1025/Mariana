@@ -22,20 +22,20 @@ int main() {
     ccontext.model_path = "serialize_engine_output.plan";
     ccontext.back_end   = mariana::Backend::TRT;
     mariana::Graph* graph = mariana::parse(ccontext);
-    // mariana::Tensor t(mariana::DeviceType::CUDA);
-    // t.set_shape({1,3,224,224});
-    // float* ptr = t.mutable_data<float>();
+    mariana::Tensor t(mariana::DeviceType::CPU);
+    t.set_shape({1, 3, 640, 640});
+    float* ptr = t.mutable_data<float>();
     // std::cout<<"d:"<<t.device()<<" "<<ptr<<"\n";
     // mariana::Tensor t1 = t.cpu();
     // float* ptr1 = t1.mutable_data<float>();
     // std::cout<<"d:"<<t1.device()<<" "<<ptr1<<"\n";
-    // mariana::ExecContext context;
-    // context.ishapes.insert({"Conv_0", {1, 3, 224, 224}});
-    // context.model_path = "yolov8l_silu.onnx";
+    mariana::ExecContext context;
+    context.ishapes.insert({"images", {1, 3, 640, 640}});
+    context.itensors.insert({"images", t});
     // std::cout<<"prerun"<<std::endl;
     
-    // mariana::GraphExec ge;
-    // ge.pre_run(*graph, context);
+    mariana::GraphExec ge;
+    ge.run(*graph, context);
 
     // mariana::transform::transform(graph, {"base_fold_reshape_to_node"});
     // mariana::trt::TensorRTEngine trt{};

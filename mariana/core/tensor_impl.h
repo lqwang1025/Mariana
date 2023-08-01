@@ -12,6 +12,7 @@
 #ifndef __CORE_TENSOR_IMPL_H__
 #define __CORE_TENSOR_IMPL_H__
 
+#include <string>
 #include <core/storage.h>
 #include <core/impl/shape.h>
 #include <core/impl/stride.h>
@@ -59,6 +60,12 @@ public:
     }
     virtual void set_storage_offset(int64_t storage_offset) {
         storage_offset_ = storage_offset;
+    }
+    void set_name(const std::string& name) {
+        name_ = name;
+    }
+    const std::string& name() const {
+        return name_;
     }
     Shape shape() const {
         return shape_;
@@ -147,6 +154,7 @@ private:
     TypeMeta data_type_;
     Storage storage_;
     Device device_;
+    std::string name_ = "";
     int64_t storage_offset_ = 0;
 };
 

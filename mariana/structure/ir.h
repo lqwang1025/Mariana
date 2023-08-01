@@ -245,6 +245,7 @@ public:
         return nodes_[i];
     }
 private:
+    friend class GraphExec;
     std::shared_ptr<Engine> engine_ = nullptr;
     std::vector<std::shared_ptr<Node>> nodes_;
     std::string name_ = "";

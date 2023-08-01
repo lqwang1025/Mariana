@@ -16,7 +16,7 @@
 #include <marc/marc.h>
 
 namespace mariana {
-
+struct ExecContext;
 class Engine {
 public:
     Engine() {}
@@ -28,6 +28,7 @@ public:
         return absl::UnimplementedError("Engine build_internal method is not implemented");
     }
     virtual Status de_serialize(Graph& graph, const ConvertContext& context)=0;
+    virtual Status run(const ExecContext& context)=0;
 };
 } // namespace mariana
 

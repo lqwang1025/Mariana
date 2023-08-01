@@ -39,6 +39,7 @@ public:
     Status build_external(Graph& graph, const ConvertContext& context) override;
     Status build_internal(Graph& graph, const ConvertContext& context) override;
     Status de_serialize(Graph& graph, const ConvertContext& context) override;
+    Status run(const ExecContext& context) override;
 private:
     void _setup_optimize(const ConvertContext& context);
     nvinfer1::ITensor* _get_itensor(const std::string& iname);

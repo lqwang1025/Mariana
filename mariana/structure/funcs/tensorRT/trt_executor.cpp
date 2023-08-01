@@ -103,6 +103,7 @@ Status TensorRTEngine::de_serialize(Graph& graph, const ConvertContext& context)
     for (int i = 0; i < engine_->getNbBindings(); ++i) {
         nvinfer1::Dims dims = engine_->getBindingDimensions(i);
         nvinfer1::DataType dtype = engine_->getBindingDataType(i);
+        
         Tensor tensor(DeviceType::CUDA);
         std::vector<int64_t> shapes;
         for (int n = 0; n < dims.nbDims; ++n) {
@@ -110,6 +111,7 @@ Status TensorRTEngine::de_serialize(Graph& graph, const ConvertContext& context)
         }
         IntArrayRef shape(shapes);
         tensor.set_shape(shape);
+        tensor.set_name(engine_->getBindingName(i));
         switch (dtype) {
         case nvinfer1::DataType::kFLOAT :
             tensor.mutable_data<float>();
@@ -130,6 +132,31 @@ Status TensorRTEngine::de_serialize(Graph& graph, const ConvertContext& context)
         }
     }
     
+    return absl::OkStatus();
+}
+
+Status TensorRTEngine::run(const ExecContext& context) {
+    void* buffers[itensors_.size()+otensors_.size()];
+    int i = 0;
+    for (auto& tensor : itensors_) {
+        if (context.itensors.count(tensor.name()) == 0) {
+            MLOG(FATAL)<<"Input name:"<<tensor.name()<<" do not in input tensors";
+        } else {
+            const Tensor& itensor = context.itensors.at(tensor.name());
+            if (itensor.device().is_cpu()) {
+                cudaMemcpyAsync(tensor.data(), itensor.data(), itensor.numel()*itensor.dtype().itemsize(), cudaMemcpyHostToDevice, stream_);
+                buffers[i] = tensor.data();
+            } else {
+                buffers[i] = itensor.data();
+            }
+        }
+        i++;
+    }
+    for (auto& tensor : otensors_) {
+        buffers[i] = tensor.data();
+        i++;
+    }
+    context_->enqueueV2(buffers, stream_, nullptr);
     return absl::OkStatus();
 }
 

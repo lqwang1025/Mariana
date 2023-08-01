@@ -16,7 +16,9 @@
 namespace mariana {
 
 void GraphExec::run(Graph& graph, ExecContext& context) {
-    
+    if (graph.engine_) {
+        graph.engine_->run(context);
+    }
 }
 
 void GraphExec::pre_run(Graph& graph, ExecContext& context) {

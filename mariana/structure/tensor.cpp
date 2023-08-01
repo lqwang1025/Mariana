@@ -43,4 +43,32 @@ Tensor Tensor::cpu() {
     }
 }
 
+// Tensor Tensor::cuda_async(cudaStream_t stream) {
+//     if (this->device() == DeviceType::CUDA) {
+//         return *this;
+//     } else if (this->device() == DeviceType::CPU) {
+//         Tensor tensor(DeviceType::CUDA);
+//         tensor.set_shape(this->shape().data());
+//         void* ptr = tensor.impl_->raw_mutable_data(this->dtype());
+//         cudaMemcpyAsync(ptr, this->data(), this->numel()*this->dtype().itemsize(), cudaMemcpyHostToDevice, stream);
+//         return tensor;
+//     } else {
+//         MLOG(FATAL)<<"Unsupport device to cuda:"<<this->device();
+//     }
+// }
+
+// Tensor Tensor::cpu_async(cudaStream_t stream) {
+//     if (this->device() == DeviceType::CPU) {
+//         return *this;
+//     } else if (this->device() == DeviceType::CUDA) {
+//         Tensor tensor(DeviceType::CPU);
+//         tensor.set_shape(this->shape().data());
+//         void* ptr = tensor.impl_->raw_mutable_data(this->dtype());
+//         cudaMemcpyAsync(ptr, this->data(), this->numel()*this->dtype().itemsize(), cudaMemcpyDeviceToHost, stream);
+//         return tensor;
+//     } else {
+//         MLOG(FATAL)<<"Unsupport device to cpu:"<<this->device();
+//     }
+// }
+
 } // namespace mariana
