@@ -16,8 +16,25 @@
 namespace mariana {
 
 void GraphExec::run(Graph& graph, ExecContext& context) {
+    context.otensors.clear();
     if (graph.engine_) {
         graph.engine_->run(context);
+        for (size_t i = 0; i < graph.engine_->otensors.size(); ++i) {
+            Tensor src;
+            if (graph.engine_->otensors[i].device().is_cuda()) {
+                src = graph.engine_->otensors[i].cpu();
+            } else {
+                src = graph.engine_->otensors[i];
+            }
+            MTensor tensor;
+            for (auto it : src.shape().data()) {
+                tensor.shape.push_back(it);
+            }
+            tensor.input = src.data();
+            tensor.dtype = src.dtype();
+            tensor.device = src.device().type();
+            context.otensors.push_back(tensor);
+        }
     }
     if (graph.processor_) {
         results = (*graph.processor_)(std::move(graph.engine_->otensors), context);

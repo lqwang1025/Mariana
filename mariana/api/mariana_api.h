@@ -118,6 +118,7 @@ struct MTensor { // It hold external data pointer only, is not responsible for f
 
 struct ExecContext {
     std::unordered_map<std::string, MTensor> itensors;
+    std::vector<MTensor> otensors;
     int pad_h = 0;
     int pad_w = 0;
     float scale = 1.f;
