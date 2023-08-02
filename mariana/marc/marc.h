@@ -16,35 +16,11 @@
 #include <unordered_map>
 
 #include <core/impl/shape.h>
+#include <api/mariana_api.h>
 
 namespace mariana {
 
 class Graph;
-
-enum class Backend : int8_t {
-    UNINIT = -1,
-    RKNN   = 0,
-    TRT    = 1,
-};
-
-enum class ModelMode : int8_t {
-    UNINIT  = -1,
-    FP16    = 0,
-    FP32    = 0,
-    INT8    = 2,
-    QATINT8 = 3,
-};
-
-struct ConvertContext {
-    ConvertContext() {}
-    ~ConvertContext() {}
-    std::unordered_map<std::string, Shape> ishapes;
-    std::string model_path;
-    bool from_scratch = false;
-    Backend back_end = Backend::UNINIT;
-    int max_batch_size = 1;
-    ModelMode mode = ModelMode::FP16;
-};
 
 Graph* parse(const ConvertContext& context);
 

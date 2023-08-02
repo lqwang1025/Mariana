@@ -1,4 +1,5 @@
 include(${CMAKE_CURRENT_LIST_DIR}/funcs/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/processors/CMakeLists.txt)
 file(GLOB CURRENT_SOURCE_PATH ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 file(GLOB CURRENT_HEAD_PATH ${CMAKE_CURRENT_LIST_DIR}/*.h)
 

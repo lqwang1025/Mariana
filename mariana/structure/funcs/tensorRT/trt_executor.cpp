@@ -15,6 +15,7 @@
 #include <logging.h>
 #include <fstream>
 #include <absl/strings/match.h>
+#include <absl/strings/str_replace.h>
 #include <structure/ir.h>
 #include <core/utils/logging.h>
 #include <structure/funcs/tensorRT/trt_executor.h>
@@ -27,17 +28,7 @@ static ::sample::Logger gLogger{};
 TensorRTEngine::TensorRTEngine() {}
 
 TensorRTEngine::~TensorRTEngine() {
-    network_->destroy();
-    builder_->destroy();
-    if (context_) {
-        context_->destroy();
-    }
-    if (engine_) {
-        engine_->destroy();
-    }
     cudaStreamDestroy(stream_);
-    itensors_.clear();
-    otensors_.clear();
 }
 
 Status TensorRTEngine::build_external(Graph& graph, const ConvertContext& context) {
@@ -50,10 +41,14 @@ Status TensorRTEngine::build_external(Graph& graph, const ConvertContext& contex
     builder_->setMaxBatchSize(context.max_batch_size);
     nvinfer1::IHostMemory* hm = builder_->buildSerializedNetwork(*network_, *config_);
     std::ofstream serialize_output_stream;
-    serialize_output_stream.open("./serialize_engine_output.trt", std::ios::out|std::ios::binary);
+    std::string output_path = absl::StrReplaceAll(context.model_path, {{".onnx", ".plan"}});
+    serialize_output_stream.open(output_path, std::ios::out|std::ios::binary);
     serialize_output_stream.write((const char*)hm->data(), hm->size());
     serialize_output_stream.close();
     parser->destroy();
+    ConvertContext __context;
+    __context.model_path = output_path;
+    de_serialize(graph, __context);
     return absl::OkStatus();
 }
 
@@ -126,9 +121,9 @@ Status TensorRTEngine::de_serialize(Graph& graph, const ConvertContext& context)
             MLOG(FATAL)<<"Unsupport dtype:"<<static_cast<int>(dtype);
         }
         if (engine_->bindingIsInput(i)) {
-            itensors_.push_back(tensor);
+            itensors.push_back(tensor);
         } else {
-            otensors_.push_back(tensor);
+            otensors.push_back(tensor);
         }
     }
     
@@ -136,27 +131,31 @@ Status TensorRTEngine::de_serialize(Graph& graph, const ConvertContext& context)
 }
 
 Status TensorRTEngine::run(const ExecContext& context) {
-    void* buffers[itensors_.size()+otensors_.size()];
+    void* buffers[itensors.size()+otensors.size()];
     int i = 0;
-    for (auto& tensor : itensors_) {
+    for (auto& tensor : itensors) {
         if (context.itensors.count(tensor.name()) == 0) {
             MLOG(FATAL)<<"Input name:"<<tensor.name()<<" do not in input tensors";
         } else {
-            const Tensor& itensor = context.itensors.at(tensor.name());
-            if (itensor.device().is_cpu()) {
-                cudaMemcpyAsync(tensor.data(), itensor.data(), itensor.numel()*itensor.dtype().itemsize(), cudaMemcpyHostToDevice, stream_);
+            void*             input  = context.itensors.at(tensor.name()).input;
+            const TypeMeta&   dtype  = context.itensors.at(tensor.name()).dtype;
+            const DeviceType& device = context.itensors.at(tensor.name()).device;
+            Shape shape{context.itensors.at(tensor.name()).shape};
+            if (Device{device}.is_cpu()) {
+                cudaMemcpyAsync(tensor.data(), input, shape.size()*dtype.itemsize(), cudaMemcpyHostToDevice, stream_);
                 buffers[i] = tensor.data();
             } else {
-                buffers[i] = itensor.data();
+                buffers[i] = input;
             }
         }
         i++;
     }
-    for (auto& tensor : otensors_) {
+    for (auto& tensor : otensors) {
         buffers[i] = tensor.data();
         i++;
     }
     context_->enqueueV2(buffers, stream_, nullptr);
+    cudaStreamSynchronize(stream_);
     return absl::OkStatus();
 }
 
@@ -171,7 +170,8 @@ nvinfer1::ITensor* TensorRTEngine::_get_itensor(const std::string& iname) {
 Status TensorRTEngine::_construct_network(Graph& graph, const ConvertContext& context) {
     for (auto& it : context.ishapes) { // set network inputs
         std::string itname = it.first+input_prefix_;
-        nvtensor_map_[itname] = _add_input(it.second, itname, nvinfer1::DataType::kFLOAT);
+        Shape shape(it.second);
+        nvtensor_map_[itname] = _add_input(shape, itname, nvinfer1::DataType::kFLOAT);
     }
     
     for (auto& node : graph.nodes()) {

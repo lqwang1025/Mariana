@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include <structure/function.h>
+#include <structure/processor.h>
 #include <structure/engine.h>
 #include <core/utils/arrary_ref.h>
 #include <core/macros/macros.h>
@@ -244,9 +245,13 @@ public:
     std::shared_ptr<Node>& nodes(size_t i) {
         return nodes_[i];
     }
+    void set_pro(Processor* processor) {
+        processor_.reset(processor);
+    }
 private:
     friend class GraphExec;
     std::shared_ptr<Engine> engine_ = nullptr;
+    std::shared_ptr<Processor> processor_ = nullptr;
     std::vector<std::shared_ptr<Node>> nodes_;
     std::string name_ = "";
 };

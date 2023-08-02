@@ -16,16 +16,10 @@
 #include <unordered_map>
 
 #include <structure/ir.h>
-#include <core/device.h>
 #include <structure/tensor.h>
+#include <api/mariana_api.h>
 
 namespace mariana {
-
-struct ExecContext {
-    std::unordered_map<std::string, Shape> ishapes;
-    std::unordered_map<std::string, Tensor> itensors;
-    Device device;
-};
 
 class GraphExec final {
 public:
@@ -33,6 +27,7 @@ public:
     ~GraphExec() {}
     void run(Graph& graph, ExecContext& context);
     void pre_run(Graph& graph, ExecContext& context);
+    result_list results;
 };
 
 } // namespace mariana

@@ -14,7 +14,6 @@
 
 #include <core/tensor_impl.h>
 #include <core/utils/logging.h>
-
 namespace mariana {
 
 class Tensor {

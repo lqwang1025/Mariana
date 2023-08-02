@@ -14,6 +14,10 @@
 
 namespace mariana {
 
+ShapeList Function::infer_shape(ShapeList shapes) {
+    return {};
+}
+
 float Function::compute_FLOPs(ShapeList oshapes) {
     MCHECK(oshapes.size() == 1);
     return static_cast<float>(oshapes[0].size() / 1024.f / 1024.f);

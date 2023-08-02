@@ -15,20 +15,9 @@
 #include <string>
 #include <ostream>
 
+#include <api/mariana_api.h>
+
 namespace mariana {
-
-enum class DeviceType : int8_t {
-    UNINIT=0,
-    CPU=0,
-    CUDA=1,
-    FPGA=2,
-    // If you add other devices
-    //  - Change the implementations of DeviceTypeName and isValidDeviceType
-    //    in device_ype.cpp
-    //  - Change the number below
-    COMPILE_TIME_MAX_DEVICE_TYPES=3
-};
-
     
 constexpr DeviceType kCPU = DeviceType::CPU;
 constexpr DeviceType kCUDA = DeviceType::CUDA;

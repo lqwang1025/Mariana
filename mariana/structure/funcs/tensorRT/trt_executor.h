@@ -25,7 +25,6 @@
 #include <core/utils/status.h>
 #include <structure/funcs/ops.h>
 #include <structure/graph_exec.h>
-#include <structure/tensor.h>
 
 namespace mariana { namespace trt {
 
@@ -73,8 +72,6 @@ private:
         {MGEMM, &TensorRTEngine::_add_fc_node},
         
     };
-    std::vector<Tensor> itensors_;
-    std::vector<Tensor> otensors_;
     std::unordered_map<std::string, nvinfer1::ITensor*> nvtensor_map_;
 };
 

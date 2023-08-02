@@ -13,9 +13,20 @@
 #include <marc/onnx/onnx.h>
 #include <absl/strings/match.h>
 #include <core/utils/logging.h>
+#include <structure/processors/register.h>
+#include <structure/processor.h>
 #include <structure/funcs/tensorRT/trt_executor.h>
 
 namespace mariana {
+
+static void _attach_graph_with_post_processor(const ConvertContext& context, Graph* graph) {
+    if (context.procategory == ProcessorCategory::UNINIT) return;
+    register_processors();
+    auto pro_make = ProcessorHolder::search(context.procategory);
+    MCHECK(pro_make!=nullptr)<<"There is no pro in registry:"<<static_cast<int>(context.procategory);
+    graph->set_pro(pro_make(context));
+    unregister_processors();
+}
 
 Graph* parse(const ConvertContext& context) {
     if (absl::EndsWith(context.model_path, ".onnx")) {
@@ -26,6 +37,7 @@ Graph* parse(const ConvertContext& context) {
                 std::shared_ptr<trt::TensorRTEngine> engine{new trt::TensorRTEngine()};
                 Graph* graph = new Graph{engine};
                 MCHECK(engine->build_external(*graph, context).ok());
+                _attach_graph_with_post_processor(context, graph);
                 return graph;
             }
         } else {
@@ -36,6 +48,7 @@ Graph* parse(const ConvertContext& context) {
         std::shared_ptr<trt::TensorRTEngine> engine{new trt::TensorRTEngine()};
         Graph* graph = new Graph{engine};
         MCHECK(engine->de_serialize(*graph, context).ok());
+        _attach_graph_with_post_processor(context, graph);
         return graph;
     } else if (absl::EndsWith(context.model_path, ".rknn")) { // RKNN
         MLOG(FATAL)<<"TODO....";

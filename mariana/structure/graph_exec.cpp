@@ -19,13 +19,16 @@ void GraphExec::run(Graph& graph, ExecContext& context) {
     if (graph.engine_) {
         graph.engine_->run(context);
     }
+    if (graph.processor_) {
+        results = (*graph.processor_)(std::move(graph.engine_->otensors), context);
+    }
 }
 
 void GraphExec::pre_run(Graph& graph, ExecContext& context) {
     for (auto& node : graph.nodes()) {
         auto inputs = node->inputs();
         if (inputs.size() == 0) {
-            node->pre_run({context.ishapes.at(node->name())});
+            node->pre_run({Shape{context.itensors.at(node->name()).shape}});
         } else {
             ShapeList shapes;
             for (auto& it : inputs) {

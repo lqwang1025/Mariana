@@ -14,13 +14,17 @@
 
 #include <core/utils/status.h>
 #include <marc/marc.h>
+#include <structure/tensor.h>
 
 namespace mariana {
 struct ExecContext;
 class Engine {
 public:
     Engine() {}
-    virtual ~Engine() {}
+    virtual ~Engine() {
+        itensors.clear();
+        otensors.clear();
+    }
     virtual Status build_external(Graph& graph, const ConvertContext& context) {
         return absl::UnimplementedError("Engine build_external method is not implemented");
     }
@@ -29,6 +33,8 @@ public:
     }
     virtual Status de_serialize(Graph& graph, const ConvertContext& context)=0;
     virtual Status run(const ExecContext& context)=0;
+    std::vector<Tensor> itensors;
+    std::vector<Tensor> otensors;
 };
 } // namespace mariana
 

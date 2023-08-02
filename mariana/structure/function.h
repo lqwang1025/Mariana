@@ -42,7 +42,7 @@ struct Function {
     }
     
     virtual tensor_list compute(tensor_list&& inputs)=0;
-    virtual ShapeList infer_shape(ShapeList shapes)=0;
+    virtual ShapeList infer_shape(ShapeList shapes);
     virtual float compute_FLOPs(ShapeList oshapes);
 protected:
     Function* next_ = nullptr;
