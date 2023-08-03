@@ -3,7 +3,7 @@ include(ExternalProject)
 set(ABSEIL_ROOT ${CMAKE_SOURCE_DIR}/3rd_party/abseil-cpp)
 set(ABSEIL_GIT_TAG 20211102.0)
 set(ABSEIL_GIT_URL https://github.com/abseil/abseil-cpp)
-set(ABSEIL_CONFIGURE cd ${ABSEIL_ROOT}/src/abseil-cpp && cmake -B build -D CMAKE_INSTALL_PREFIX=${ABSEIL_ROOT}
+set(ABSEIL_CONFIGURE cd ${ABSEIL_ROOT}/src/abseil-cpp && cmake -B build -D CMAKE_INSTALL_PREFIX=${ABSEIL_ROOT} -D CMAKE_C_COMPILER=${CMAKE_C_COMPILER} -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
   -D CMAKE_POSITION_INDEPENDENT_CODE=ON -D CMAKE_CXX_STANDARD=11 -D ABSL_PROPAGATE_CXX_STD=ON .)
 set(ABSEIL_MAKE  cd ${ABSEIL_ROOT}/src/abseil-cpp/build && make -j8)
 

@@ -3,8 +3,8 @@ include(ExternalProject)
 set(PROTOBUF_ROOT ${CMAKE_SOURCE_DIR}/3rd_party/protobuf)
 set(PROTOBUF_GIT_TAG  v21.10)
 set(PROTOBUF_GIT_URL https://github.com/protocolbuffers/protobuf)
-set(PROTOBUF_CONFIGURE cd ${PROTOBUF_ROOT}/src/protobuf && cmake -B build -D CMAKE_INSTALL_PREFIX=${PROTOBUF_ROOT}
-  -D CMAKE_POSITION_INDEPENDENT_CODE=ON -D protobuf_BUILD_TESTS=OFF -D BUILD_SHARED_LIBS=OFF -D protobuf_BUILD_TESTS=OFF.)
+set(PROTOBUF_CONFIGURE cd ${PROTOBUF_ROOT}/src/protobuf && cmake -B build -D CMAKE_INSTALL_PREFIX=${PROTOBUF_ROOT} -D CMAKE_C_COMPILER=${CMAKE_C_COMPILER} -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+  -D CMAKE_POSITION_INDEPENDENT_CODE=ON -D protobuf_BUILD_TESTS=OFF -D BUILD_SHARED_LIBS=OFF -D protobuf_WITH_ZLIB=OFF .)
 set(PROTOBUF_MAKE  cd ${PROTOBUF_ROOT}/src/protobuf/build && make -j8)
 set(PROTOBUF_INSTALL cd ${PROTOBUF_ROOT}/src/protobuf/build && make install)
 
