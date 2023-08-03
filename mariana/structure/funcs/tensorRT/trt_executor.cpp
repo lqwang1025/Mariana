@@ -61,9 +61,13 @@ Status TensorRTEngine::build_internal(Graph& graph, const ConvertContext& contex
     builder_->setMaxBatchSize(context.max_batch_size);
     nvinfer1::IHostMemory* hm = builder_->buildSerializedNetwork(*network_, *config_);
     std::ofstream serialize_output_stream;
-    serialize_output_stream.open("./serialize_engine_output.trt", std::ios::out|std::ios::binary);
+    std::string output_path = absl::StrReplaceAll(context.model_path, {{".onnx", ".plan"}});
+    serialize_output_stream.open(output_path, std::ios::out|std::ios::binary);
     serialize_output_stream.write((const char*)hm->data(), hm->size());
     serialize_output_stream.close();
+    ConvertContext __context;
+    __context.model_path = output_path;
+    de_serialize(graph, __context);
     return absl::OkStatus();
 }
 

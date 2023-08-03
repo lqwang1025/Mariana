@@ -28,10 +28,13 @@ namespace mariana {
 #define MCONCAT "CONCAT"
 #define MRESIZE "RESIZE"
 #define MPERMUTE "PERMUTE"
+#define MSLICE "SLICE"
 
 //Math op
 #define MADD "ADD"
 #define MMUL "MUL"
+#define MSUB "SUB"
+#define MDIV "DIV"
 
 // Activation op
 #define MRELU "RELU"

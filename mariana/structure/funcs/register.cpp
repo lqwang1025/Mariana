@@ -24,6 +24,7 @@
 #include <structure/funcs/concat.h>
 #include <structure/funcs/resize.h>
 #include <structure/funcs/permute.h>
+#include <structure/funcs/slice.h>
 
 namespace mariana {
 
@@ -42,9 +43,12 @@ void register_funcs() {
     ADD_FUNC(GAVPOOL, PoolFunction);
     ADD_FUNC(ADD, MathFunction);
     ADD_FUNC(MUL, MathFunction);
+    ADD_FUNC(SUB, MathFunction);
+    ADD_FUNC(DIV, MathFunction);
     ADD_FUNC(GEMM, GemmFunction);
     ADD_FUNC(FLATTEN, FlattenFunction);
     ADD_FUNC(SPLIT, SplitFunction);
+    ADD_FUNC(SLICE, SliceFunction);
     ADD_FUNC(CONCAT, ConcatFunction);
     ADD_FUNC(RESIZE, ResizeFunction);
     ADD_FUNC(PERMUTE, PermuteFunction);

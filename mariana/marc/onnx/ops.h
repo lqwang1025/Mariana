@@ -26,6 +26,7 @@ namespace mariana { namespace onnx {
 #define KFlatten "Flatten"
 #define KGemm "Gemm"
 #define KSplit "Split"
+#define KSlice "Slice"
 #define KConcat "Concat"
 #define KResize "Resize"
 #define KTranspose "Transpose"
@@ -33,6 +34,8 @@ namespace mariana { namespace onnx {
 // Math node
 #define KAdd "Add"
 #define KMul "Mul"
+#define KSub "Sub"
+#define KDiv "Div"
 
 // Activation node
 #define KSigmoid "Sigmoid"

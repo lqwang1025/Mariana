@@ -32,7 +32,10 @@ Graph* parse(const ConvertContext& context) {
     if (absl::EndsWith(context.model_path, ".onnx")) {
         if (context.back_end == Backend::TRT) {
             if (context.from_scratch) { // To construct network form onnx by us.
+                std::shared_ptr<trt::TensorRTEngine> engine{new trt::TensorRTEngine()};
                 Graph* graph = onnx::parse(context.model_path);
+                MCHECK(engine->build_internal(*graph, context).ok());
+                _attach_graph_with_post_processor(context, graph);
             } else { // To construct network form onnx by TRT.
                 std::shared_ptr<trt::TensorRTEngine> engine{new trt::TensorRTEngine()};
                 Graph* graph = new Graph{engine};
