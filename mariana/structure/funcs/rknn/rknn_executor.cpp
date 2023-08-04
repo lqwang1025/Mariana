@@ -1,0 +1,97 @@
+/*
+ *        (C) COPYRIGHT Daniel Wang Limited.
+ *             ALL RIGHTS RESERVED
+ *
+ * File       : rknn_executor.cpp
+ * Authors    : wangliquan@cc-SYS-7048GR-TR
+ * Create Time: 2023-08-04:11:23:10
+ * Description:
+ * 
+ */
+
+#include <cstdio>
+
+#include <structure/funcs/rknn/rknn_executor.h>
+
+namespace mariana { namespace rknn {
+
+#define RET_CHECKER(ret)											\
+	do {															\
+		if ((ret) < 0) {											\
+            MLOG(ERROR<<"Rknn ret code error[line]:"<<__LINE__;     \
+		}															\
+	} while(false)
+
+RknnEngine::RknnEngine() {
+    
+}
+
+virtual RknnEngine::~RknnEngine() {
+    
+}
+
+uint8_t* RknnEngine::_load_data(FILE* fp, size_t ofst, size_t sz) {
+    unsigned char* data;
+	int            ret;
+	data = NULL;
+	if (NULL == fp) {
+		return NULL;
+	}
+	ret = fseek(fp, ofst, SEEK_SET);
+	if (ret != 0) {
+		printf("blob seek failure.\n");
+		return NULL;
+	}
+	data = (unsigned char*)malloc(sz);
+	if (data == NULL) {
+		printf("buffer malloc failure.\n");
+		return NULL;
+	}
+	ret = fread(data, 1, sz, fp);
+	return data;
+}
+
+uint8_t* RknnEngine::_load_model(const std::string& filename, int* model_size) {
+    FILE*          fp;
+	unsigned char* data;
+
+	fp = fopen(filename.c_str(), "rb");
+	if (NULL == fp) {
+		MLOG(FATAL)<<"Open rknn model:"<<filename<<" failed."
+	}
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	data = load_data(fp, 0, size);
+	fclose(fp);
+	*model_size = size;
+	return data;
+}
+
+Status RknnEngine::de_serialize(Graph& graph, const ConvertContext& context) {
+    model_data_ = _load_model(context.model_path, &model_size_);
+    RET_CHECKER(rknn_init(&ctx_, model_data_, model_size_, 0));
+    rknn_sdk_version version;
+	RET_CHECKER(rknn_query(ctx_, RKNN_QUERY_SDK_VERSION, &version, sizeof(rknn_sdk_version)));
+    printf("RKNN version: %s Driver version: %s\n", version.api_version, version.drv_version);
+    RET_CHECKER(rknn_query(ctx_, RKNN_QUERY_IN_OUT_NUM, &io_num_, sizeof(io_num_)));
+    input_attrs_.resize(io_num_.n_input);
+    memset(input_attrs_.data(), 0, io_num_.n_input*sizeof(rknn_tensor_attr));
+    output_attrs_.resize(io_num_.n_output);
+    memset(output_attrs_.data(), 0, io_num_.n_output*sizeof(rknn_tensor_attr));
+    for (size_t i = 0; i < input_attrs_.size(); ++i) {
+        input_attrs_[i].index = i;
+    }
+
+    for (size_t i = 0; i < ouptut_attrs_.size(); ++i) {
+        output_attrs_[i].index = i;
+    }
+    return absl::OkStatus();
+}
+
+Status RknnEngine::run(const ExecContext& context) {
+    std::unordered_map<std::string, MTensor> itensors;
+    
+    return absl::OkStatus();
+}
+
+}} // namespace mariana::rknn

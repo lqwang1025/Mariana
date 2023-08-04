@@ -16,6 +16,7 @@
 namespace mariana {
 
 Tensor Tensor::cuda() {
+#ifdef WITH_CUDA
     if (this->device() == DeviceType::CUDA) {
         return *this;
     } else if (this->device() == DeviceType::CPU) {
@@ -27,17 +28,24 @@ Tensor Tensor::cuda() {
     } else {
         MLOG(FATAL)<<"Unsupport device to cuda:"<<this->device();
     }
+#else
+    MLOG(FATAL)<<"Mariana compiling is not with CUDA!";
+#endif
 }
 
 Tensor Tensor::cpu() {
     if (this->device() == DeviceType::CPU) {
         return *this;
     } else if (this->device() == DeviceType::CUDA) {
+#ifdef WITH_CUDA
         Tensor tensor(DeviceType::CPU);
         tensor.set_shape(this->shape().data());
         void* ptr = tensor.impl_->raw_mutable_data(this->dtype());
         cudaMemcpy(ptr, this->data(), this->numel()*this->dtype().itemsize(), cudaMemcpyDeviceToHost);
         return tensor;
+#else
+        MLOG(FATAL)<<"Mariana compiling is not with CUDA!";
+#endif
     } else {
         MLOG(FATAL)<<"Unsupport device to cpu:"<<this->device();
     }

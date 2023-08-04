@@ -15,7 +15,14 @@
 #include <core/utils/logging.h>
 #include <structure/processors/register.h>
 #include <structure/processor.h>
+
+#ifdef WITH_TRT
 #include <structure/funcs/tensorRT/trt_executor.h>
+#endif
+
+#ifdef WITH_RKNN
+#include <structure/funcs/rknn/rknn_executor.h>
+#endif
 
 namespace mariana {
 
@@ -31,6 +38,7 @@ static void _attach_graph_with_post_processor(const ConvertContext& context, Gra
 Graph* parse(const ConvertContext& context) {
     if (absl::EndsWith(context.model_path, ".onnx")) {
         if (context.back_end == Backend::TRT) {
+#ifdef WITH_TRT
             if (context.from_scratch) { // To construct network form onnx by us.
                 std::shared_ptr<trt::TensorRTEngine> engine{new trt::TensorRTEngine()};
                 Graph* graph = onnx::parse(context.model_path);
@@ -43,18 +51,33 @@ Graph* parse(const ConvertContext& context) {
                 _attach_graph_with_post_processor(context, graph);
                 return graph;
             }
+#else
+            MLOG(FATAL)<<"Mariana compiling is not with TRT!";
+#endif
         } else {
             MLOG(FATAL)<<"Unspport model type:"<<context.model_path
                        <<" Now support model from onnx:{TRT}";
         }
     } else if (absl::EndsWith(context.model_path, ".plan")) { // TRT
+#ifdef WITH_TRT
         std::shared_ptr<trt::TensorRTEngine> engine{new trt::TensorRTEngine()};
         Graph* graph = new Graph{engine};
         MCHECK(engine->de_serialize(*graph, context).ok());
         _attach_graph_with_post_processor(context, graph);
         return graph;
+#else
+            MLOG(FATAL)<<"Mariana compiling is not with TRT!";
+#endif
     } else if (absl::EndsWith(context.model_path, ".rknn")) { // RKNN
-        MLOG(FATAL)<<"TODO....";
+#ifdef WITH_RKNN
+        std::shared_ptr<trt::RknnEngine> engine{new trt::RknnEngine()};
+        Graph* graph = new Graph{engine};
+        MCHECK(engine->de_serialize(*graph, context).ok());
+        _attach_graph_with_post_processor(context, graph);
+        return graph;
+#else
+        MLOG(FATAL)<<"Mariana compiling is not with RKNN!";
+#endif
     } else {
         MLOG(FATAL)<<"Unspport model type:"<<context.model_path
                    <<" Now support model:{*.plan(for TRT) *.rknn(for RKNN) *.onnx(for Internal)}";
