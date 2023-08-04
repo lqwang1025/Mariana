@@ -27,3 +27,5 @@ set(ABSEIL_LIB_DIR ${ABSEIL_ROOT}/lib)
 set(ABSEIL_INCLUDE_DIR ${ABSEIL_ROOT}/include)
 link_directories(${ABSEIL_LIB_DIR})
 include_directories(${ABSEIL_INCLUDE_DIR})
+
+list(APPEND MARIANA_EXTERN_LIB -labsl)

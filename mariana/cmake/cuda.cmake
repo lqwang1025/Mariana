@@ -26,3 +26,5 @@ if(NOT CUDA_FOUND)
   message("Do not find cuda lib.")
   return()
 endif()
+
+list(APPEND MARIANA_EXTERN_LIB ${CUDA_CUDART_LIBRARY})

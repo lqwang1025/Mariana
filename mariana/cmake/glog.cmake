@@ -21,3 +21,5 @@ set(GLOG_INCLUDE_DIR  ${GLOG_ROOT}/include)
 
 link_directories(${GLOG_LIB_DIR})
 include_directories(${GLOG_INCLUDE_DIR})
+
+list(APPEND MARIANA_EXTERN_LIB -lglog)

@@ -99,8 +99,8 @@ add_library(${CMAKE_PROJECT_NAME} SHARED)
 target_sources(${CMAKE_PROJECT_NAME}-static PUBLIC ${MARIANA_SRC})
 target_sources(${CMAKE_PROJECT_NAME} PUBLIC ${MARIANA_SRC})
 
-target_link_libraries(${CMAKE_PROJECT_NAME}-static PUBLIC -lglog -labsl -lpthread -lprotobuf ${TRT_LIBRARY} ${CUDA_CUDART_LIBRARY})
-target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC -lglog -labsl -lpthread -lprotobuf ${TRT_LIBRARY} ${CUDA_CUDART_LIBRARY})
+target_link_libraries(${CMAKE_PROJECT_NAME}-static PUBLIC ${MARIANA_EXTERN_LIB})
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC ${MARIANA_EXTERN_LIB})
 
 set_target_properties(${CMAKE_PROJECT_NAME}
   PROPERTIES

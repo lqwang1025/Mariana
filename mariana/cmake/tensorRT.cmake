@@ -8,3 +8,5 @@ include_directories(${TENSORRT_INCLUDE_DIR} ${TENSORRT_ROOT}/samples/common)
 
 list(APPEND TRT_LIBRARY nvinfer)
 list(APPEND TRT_LIBRARY nvonnxparser)
+
+list(APPEND MARIANA_EXTERN_LIB ${TRT_LIBRARY})
