@@ -227,7 +227,9 @@ public:
         name_ = rhs.name_;
         return *this;
     }
-    
+    std::shared_ptr<Engine> engine() const {
+        return engine_;
+    }
     Node& add_node(const std::string& name, const std::string& op_type);
     std::shared_ptr<Node> make_node();
     size_t num_of_nodes(void) const {

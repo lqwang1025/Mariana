@@ -104,6 +104,7 @@ struct ConvertContext {
     float conf_thresh = 0.f;
     std::vector<int> grids;
     std::vector<int> strides;
+    float grid_offset = 0.f;
     std::vector<std::string> labels;
 };
 
@@ -128,6 +129,8 @@ struct Runtime {
     Runtime(const ConvertContext& ccontext);
     ~Runtime();
     std::vector<MResult> run_with(ExecContext& econtext);
+    std::vector<std::string> input_names;
+    std::vector<std::string> output_names;
 private:
     void* handle_ = nullptr;
 };

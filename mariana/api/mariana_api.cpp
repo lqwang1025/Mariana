@@ -11,6 +11,7 @@
 
 #include <mariana_api.h>
 #include <marc/marc.h>
+#include <core/utils/logging.h>
 #include <structure/ir.h>
 #include <structure/graph_exec.h>
 
@@ -18,6 +19,16 @@ namespace mariana {
 
 Runtime::Runtime(const ConvertContext& ccontext) {
     mariana::Graph* graph = mariana::parse(ccontext);
+    if (graph->engine()) {
+        for (auto &it : graph->engine()->itensors) {
+            input_names.push_back(it.name());
+        }
+        for (auto &it : graph->engine()->otensors) {
+            output_names.push_back(it.name());
+        }
+    } else {
+        MCHECK(false);
+    }
     handle_ = graph;
 }
 

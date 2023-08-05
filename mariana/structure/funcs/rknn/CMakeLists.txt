@@ -1,3 +1,14 @@
+set(RKNN_ROOT ${CMAKE_SOURCE_DIR}/3rd_party/librknn_api)
+if (CMAKE_C_COMPILER MATCHES "aarch64")
+  set(LIB_ARCH lib64)
+else()
+  set(LIB_ARCH lib)
+endif()
+set(RKNN_LIB_DIR ${RKNN_ROOT}/${LIB_ARCH})
+set(RKNN_INCLUDE_DIR ${RKNN_ROOT}/include)
+link_directories(${RKNN_LIB_DIR})
+include_directories(${RKNN_INCLUDE_DIR})
+
 file(GLOB CURRENT_SOURCE_PATH ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 file(GLOB CURRENT_HEAD_PATH ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
@@ -5,3 +16,5 @@ set(LIB_NAME mariana_structure_funcs_rknn)
 add_library(${LIB_NAME} OBJECT ${CURRENT_SOURCE_PATH})
 target_sources(${LIB_NAME} PRIVATE ${CURRENT_SOURCE_PATH} PUBLIC ${CURRENT_HEAD_PATH})
 list(APPEND MARIANA_STRUCTURE_OBJECTS $<TARGET_OBJECTS:${LIB_NAME}>)
+
+list(APPEND MARIANA_EXTERN_LIB -lrknn_api)

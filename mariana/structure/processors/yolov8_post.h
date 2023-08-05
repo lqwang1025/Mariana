@@ -31,6 +31,7 @@ struct Yolov8PostOption : public BaseOption {
     float conf_thresh = 0.f;
     std::vector<int> grids;
     std::vector<int> strides;
+    float grid_offset = 0.f;
     std::vector<std::string> labels;
 };
 
@@ -52,6 +53,7 @@ struct Yolov8ThreePostProcessor : public Processor {
         option.grids       = context.grids;
         option.strides     = context.strides;
         option.labels      = context.labels;
+        option.grid_offset = context.grid_offset;
     }
     ~Yolov8ThreePostProcessor() {}
     Yolov8PostOption option;

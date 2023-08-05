@@ -70,7 +70,7 @@ Graph* parse(const ConvertContext& context) {
 #endif
     } else if (absl::EndsWith(context.model_path, ".rknn")) { // RKNN
 #ifdef WITH_RKNN
-        std::shared_ptr<trt::RknnEngine> engine{new trt::RknnEngine()};
+        std::shared_ptr<rknn::RknnEngine> engine{new rknn::RknnEngine()};
         Graph* graph = new Graph{engine};
         MCHECK(engine->de_serialize(*graph, context).ok());
         _attach_graph_with_post_processor(context, graph);

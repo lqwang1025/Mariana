@@ -10,24 +10,24 @@
  */
 
 #include <cstdio>
-
+#include <core/utils/logging.h>
 #include <structure/funcs/rknn/rknn_executor.h>
-
-namespace mariana { namespace rknn {
 
 #define RET_CHECKER(ret)											\
 	do {															\
 		if ((ret) < 0) {											\
-            MLOG(ERROR<<"Rknn ret code error[line]:"<<__LINE__;     \
+            MLOG(ERROR)<<"Rknn ret code error[line]:"<<__LINE__;    \
 		}															\
 	} while(false)
+
+namespace mariana { namespace rknn {
 
 RknnEngine::RknnEngine() {
     
 }
 
-virtual RknnEngine::~RknnEngine() {
-    
+RknnEngine::~RknnEngine() {
+	RET_CHECKER(rknn_destroy(ctx_));
 }
 
 uint8_t* RknnEngine::_load_data(FILE* fp, size_t ofst, size_t sz) {
@@ -57,11 +57,11 @@ uint8_t* RknnEngine::_load_model(const std::string& filename, int* model_size) {
 
 	fp = fopen(filename.c_str(), "rb");
 	if (NULL == fp) {
-		MLOG(FATAL)<<"Open rknn model:"<<filename<<" failed."
+		MLOG(FATAL)<<"Open rknn model:"<<filename<<" failed.";
 	}
 	fseek(fp, 0, SEEK_END);
 	int size = ftell(fp);
-	data = load_data(fp, 0, size);
+	data = _load_data(fp, 0, size);
 	fclose(fp);
 	*model_size = size;
 	return data;
@@ -80,17 +80,73 @@ Status RknnEngine::de_serialize(Graph& graph, const ConvertContext& context) {
     memset(output_attrs_.data(), 0, io_num_.n_output*sizeof(rknn_tensor_attr));
     for (size_t i = 0; i < input_attrs_.size(); ++i) {
         input_attrs_[i].index = i;
+        RET_CHECKER(rknn_query(ctx_, RKNN_QUERY_INPUT_ATTR, &(input_attrs_[i]), sizeof(rknn_tensor_attr)));
+        Tensor tensor(DeviceType::CPU);
+        std::vector<int64_t> shapes;
+        for (int n = input_attrs_[i].n_dims-1; n >= 0; --n) {
+            shapes.push_back(input_attrs_[i].dims[n]);
+        }
+        IntArrayRef shape(shapes);
+        tensor.set_shape(shape);
+        tensor.set_name(input_attrs_[i].name);
+        itensors.push_back(tensor);
     }
-
-    for (size_t i = 0; i < ouptut_attrs_.size(); ++i) {
+    for (size_t i = 0; i < output_attrs_.size(); ++i) {
         output_attrs_[i].index = i;
+        RET_CHECKER(rknn_query(ctx_, RKNN_QUERY_OUTPUT_ATTR, &(output_attrs_[i]), sizeof(rknn_tensor_attr)));
+        Tensor tensor(DeviceType::CPU);
+        std::vector<int64_t> shapes;
+        for (int n = output_attrs_[i].n_dims-1; n >= 0; --n) {
+            shapes.push_back(output_attrs_[i].dims[n]);
+        }
+        
+        IntArrayRef shape(shapes);
+        tensor.set_shape(shape);
+        tensor.set_name(output_attrs_[i].name);
+
+        // todo : base on datatype
+        tensor.mutable_data<float>();
+        otensors.push_back(tensor);
     }
     return absl::OkStatus();
 }
 
 Status RknnEngine::run(const ExecContext& context) {
-    std::unordered_map<std::string, MTensor> itensors;
-    
+    rknn_input inputs[itensors.size()];
+    memset(inputs, 0, sizeof(inputs));
+    int index = 0;
+    for (auto& tensor : itensors) {
+        if (context.itensors.count(tensor.name()) == 0) {
+            MLOG(FATAL)<<"Input name:"<<tensor.name()<<" do not in input tensors";
+        } else {
+            void*             input    = context.itensors.at(tensor.name()).input;
+            const TypeMeta&   dtype    = context.itensors.at(tensor.name()).dtype;
+            if (dtype.match<uint8_t>()) {
+                inputs[index].type         = RKNN_TENSOR_UINT8;
+            } else if (dtype.match<float>()) {
+                inputs[index].type         = RKNN_TENSOR_FLOAT32;
+            } else {
+                MLOG(FATAL)<<"[rknn] Upsupport data type :"<<dtype.data().name;
+            }
+                 
+			inputs[index].size         = tensor.numel();
+			inputs[index].fmt          = RKNN_TENSOR_NHWC;
+			inputs[index].pass_through = 0;
+			inputs[index].buf          = input;
+            inputs[index].index        = index++;
+        }
+    }
+    RET_CHECKER(rknn_inputs_set(ctx_, io_num_.n_input, inputs));
+    RET_CHECKER(rknn_run(ctx_, NULL));
+    rknn_output outputs[io_num_.n_output];
+    for (int i = 0; i < io_num_.n_output; i++) {
+        outputs[i].index       = i;
+        outputs[i].want_float  = 1;
+        outputs[i].is_prealloc = 1;
+        outputs[i].size        = otensors[i].numel()*otensors[i].itemsize();
+        outputs[i].buf         = otensors[i].data();
+    }
+    RET_CHECKER(rknn_outputs_get(ctx_, io_num_.n_output, outputs, NULL));
     return absl::OkStatus();
 }
 

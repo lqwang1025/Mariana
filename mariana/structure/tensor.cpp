@@ -11,7 +11,9 @@
 
 #include <structure/tensor.h>
 #include <core/utils/logging.h>
+#ifdef WITH_CUDA
 #include <cuda_runtime_api.h>
+#endif
 
 namespace mariana {
 

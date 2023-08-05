@@ -93,6 +93,59 @@ result_list Yolov8OnePostProcessor::work(tensor_list&& inputs, ExecContext& cont
 
 result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& context) {
     result_list results;
+    float* buffer = static_cast<float*>(inputs[0].data());
+	float* cls_buf = static_cast<float*>(inputs[1].data());
+    Shape shape1 = inputs[0].shape(); // [1, 8400, 4]
+    Shape shape2 = inputs[1].shape(); // [1, 8400, 17]
+    int nb = shape1[0];
+    int ng = shape1[2];
+    int nc = shape2[2];
+    for (int n = 0; n < nb; ++n) {
+        result_list __results;
+        for (size_t i = 0; i < option.grids.size(); ++i) {
+            for (int h = 0; h < option.grids[i]; ++h) {
+                int h_offset = (h*option.grids[i])<<2;
+                int cls_h_offset = h*option.grids[i]*nc;
+                for (int w = 0; w < option.grids[i]; ++w) {
+                    int w_offset = w<<2;
+                    int cls_w_offset = w*nc;
+                    float max = -FLT_MAX;
+                    int index = -1;
+                    for (int c = 0; c < nc; ++c) {
+                        float score = cls_buf[cls_h_offset+cls_w_offset+c];
+                        if (max < score) {
+                            max = score;
+                            index = c;
+                        }
+                    }
+                    if (max < option.conf_thresh) continue;
+				
+                    float x0 = buffer[h_offset+w_offset+0];
+                    float y0 = buffer[h_offset+w_offset+1];
+                    float x1 = buffer[h_offset+w_offset+2];
+                    float y1 = buffer[h_offset+w_offset+3];
+                    x0 = static_cast<float>(w) - x0 + option.grid_offset;
+                    y0 = static_cast<float>(h) - y0 + option.grid_offset;
+                    x1 = static_cast<float>(w) + x1 + option.grid_offset;
+                    y1 = static_cast<float>(h) + y1 + option.grid_offset;
+                    MResult result;
+                    result.batch_idx  = n;
+                    result.cls_idx    = index;
+                    result.class_name = option.labels[index];
+                    result.score      = max;
+                    result.bbox.tl.x  = (x0*(option.strides[i])-context.pad_w)/context.scale;
+					result.bbox.tl.y  = (y0*(option.strides[i])-context.pad_h)/context.scale;
+					result.bbox.br.x  = (x1*(option.strides[i])-context.pad_w)/context.scale;
+					result.bbox.br.y  = (y1*(option.strides[i])-context.pad_h)/context.scale;
+                    __results.push_back(result);
+                }
+            }
+            buffer += (option.grids[i]*option.grids[i]<<2);
+            cls_buf += (option.grids[i]*option.grids[i]*nc);
+        }
+        nms(__results, option.iou_thresh);
+        results.insert(results.end(), __results.begin(), __results.end());
+    }
     return results;
 }
 
