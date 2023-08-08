@@ -13,8 +13,11 @@
 #include <mariana_api.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/dnn.hpp>
+#include <sys/time.h>
 
 using result_list = std::vector<mariana::MResult>;
+
+static double __get_us(struct timeval t) { return (t.tv_sec * 1000000 + t.tv_usec); }
 
 static float iou_of(const mariana::Rect& a, const mariana::Rect& b) {
 	float max_x = std::max(a.tl.x, b.tl.x);
@@ -47,7 +50,7 @@ static void nms(result_list& dets, float iou_thresh) {
 }
 
 
-result_list yolov8_post(mariana::ExecContext& context, float conf_thresh, float iou_thresh, const mariana::ConvertContext& option) {
+result_list yolov8_post(mariana::ExecContext& context, const mariana::ConvertContext& option) {
     result_list results;
     mariana::MTensor tensor = context.otensors[0];
     std::vector<int> shape  = tensor.shape;
@@ -68,7 +71,7 @@ result_list yolov8_post(mariana::ExecContext& context, float conf_thresh, float 
                     index = c-4;
                 }
             }
-            if (max < conf_thresh) continue;
+            if (max < option.conf_thresh) continue;
 
             float cx = static_cast<float*>(tensor.input)[nstride+gstride+0];
 			float cy = static_cast<float*>(tensor.input)[nstride+gstride+1];
@@ -85,7 +88,7 @@ result_list yolov8_post(mariana::ExecContext& context, float conf_thresh, float 
             result.bbox.br.y  = (cy + h/2 - context.pad_h)/context.scale;
             __results.push_back(result);
         }
-        nms(__results, iou_thresh);
+        nms(__results, option.iou_thresh);
         results.insert(results.end(), __results.begin(), __results.end());
     }
     return results;    
@@ -126,13 +129,15 @@ cv::Mat letterbox(cv::Mat &src, int h, int w, mariana::ExecContext& context, boo
 }
 
 int main(int argv, const char* argc[]) {
+    const int imgsz = 800;
     mariana::ConvertContext ccontext;
-    //ccontext.ishapes.insert({"Conv_0", {1, 3, 640, 640}});
-    ccontext.model_path = "../models/yolov8l_relu.plan";
+    ccontext.ishapes.insert({"Conv_3", {1, 3, imgsz, imgsz}});
+    ccontext.model_path = "../models/yolov8x_silu.plan";
     ccontext.back_end   = mariana::Backend::TRT;
     ccontext.procategory = mariana::ProcessorCategory::YOLOV8_POST_ONE_OUTPUT;
     ccontext.iou_thresh = 0.6f;
     ccontext.conf_thresh = 0.25f;
+    //ccontext.from_scratch = true;
     ccontext.labels = {"flame",
                        "flame_fu",
                        "smoke",
@@ -152,18 +157,28 @@ int main(int argv, const char* argc[]) {
     
     mariana::ExecContext econtext;
     cv::Mat src = cv::imread("./165.jpg");
-    cv::Mat resized = letterbox(src, 640, 640, econtext);
+    cv::Mat resized = letterbox(src, imgsz, imgsz, econtext);
     cv::Mat input = cv::dnn::blobFromImage(resized, 0.00392157d/*scale*/, cv::Size(), cv::Scalar(), /*swapRB*/false);
-    std::cout<<"d:"<<input.size<<std::endl;
     mariana::MTensor tensor;
-    tensor.shape  = {1, 3, 640, 640};
+    tensor.shape  = {1, 3, imgsz, imgsz};
     tensor.dtype  = mariana::TypeMeta::make<float>();
     tensor.input  = input.data;
     tensor.device = mariana::DeviceType::CPU;
     econtext.itensors.insert({"images", tensor});
+    struct timeval start_time, stop_time;
+    gettimeofday(&start_time, NULL);
     runtime.run_with(econtext);
+    std::vector<mariana::MResult> results =  yolov8_post(econtext, ccontext);
+    gettimeofday(&stop_time, NULL);
+    printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 1000);
     
-    std::vector<mariana::MResult> results =  yolov8_post(econtext, 0.25f, 0.6f, ccontext);
+    gettimeofday(&start_time, NULL);
+    for (int i  = 0; i < 10; ++i ) {
+        runtime.run_with(econtext);
+        std::vector<mariana::MResult> results =  yolov8_post(econtext, ccontext);
+    }
+    gettimeofday(&stop_time, NULL);
+    printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 10000);
     
     for (auto& it : results) {
 		cv::rectangle(src, cv::Rect(it.bbox.tl.x, it.bbox.tl.y, it.bbox.w(), it.bbox.h()), cv::Scalar(0, 0, 255), 4);
