@@ -37,11 +37,11 @@ private:
     uint8_t* _load_model(const std::string& filename, int* model_size);
 private:
     int model_size_ = 0;
-    uint8_t* model_data_ = nullptr;
     rknn_context   ctx_;
     rknn_input_output_num io_num_;
     std::vector<rknn_tensor_attr> input_attrs_;
     std::vector<rknn_tensor_attr> output_attrs_;
+    std::vector<rknn_input> rknn_inputs_;
 };
 
 }} // namespace mariana::rknn

@@ -68,14 +68,17 @@ uint8_t* RknnEngine::_load_model(const std::string& filename, int* model_size) {
 }
 
 Status RknnEngine::de_serialize(Graph& graph, const ConvertContext& context) {
-    model_data_ = _load_model(context.model_path, &model_size_);
-    RET_CHECKER(rknn_init(&ctx_, model_data_, model_size_, 0));
+    uint8_t* model_data = _load_model(context.model_path, &model_size_);
+    RET_CHECKER(rknn_init(&ctx_, model_data, model_size_, 0));
+    free(model_data);
     rknn_sdk_version version;
 	RET_CHECKER(rknn_query(ctx_, RKNN_QUERY_SDK_VERSION, &version, sizeof(rknn_sdk_version)));
     printf("RKNN version: %s Driver version: %s\n", version.api_version, version.drv_version);
     RET_CHECKER(rknn_query(ctx_, RKNN_QUERY_IN_OUT_NUM, &io_num_, sizeof(io_num_)));
     input_attrs_.resize(io_num_.n_input);
     memset(input_attrs_.data(), 0, io_num_.n_input*sizeof(rknn_tensor_attr));
+    rknn_inputs_.resize(io_num_.n_input);
+    memset(rknn_inputs_.data(), 0, io_num_.n_input*sizeof(rknn_input));
     output_attrs_.resize(io_num_.n_output);
     memset(output_attrs_.data(), 0, io_num_.n_output*sizeof(rknn_tensor_attr));
     for (size_t i = 0; i < input_attrs_.size(); ++i) {
@@ -112,8 +115,8 @@ Status RknnEngine::de_serialize(Graph& graph, const ConvertContext& context) {
 }
 
 Status RknnEngine::run(const ExecContext& context) {
-    rknn_input inputs[itensors.size()];
-    memset(inputs, 0, sizeof(inputs));
+    // rknn_input inputs[itensors.size()];
+    // memset(inputs, 0, sizeof(inputs));
     int index = 0;
     for (auto& tensor : itensors) {
         if (context.itensors.count(tensor.name()) == 0) {
@@ -122,22 +125,23 @@ Status RknnEngine::run(const ExecContext& context) {
             void*             input    = context.itensors.at(tensor.name()).input;
             const TypeMeta&   dtype    = context.itensors.at(tensor.name()).dtype;
             if (dtype.match<uint8_t>()) {
-                inputs[index].type         = RKNN_TENSOR_UINT8;
+                rknn_inputs_[index].type         = RKNN_TENSOR_UINT8;
             } else if (dtype.match<float>()) {
-                inputs[index].type         = RKNN_TENSOR_FLOAT32;
+                rknn_inputs_[index].type         = RKNN_TENSOR_FLOAT32;
             } else {
                 MLOG(FATAL)<<"[rknn] Upsupport data type :"<<dtype.data().name;
             }
                  
-			inputs[index].size         = tensor.numel();
-			inputs[index].fmt          = RKNN_TENSOR_NHWC;
-			inputs[index].pass_through = 0;
-			inputs[index].buf          = input;
-            inputs[index].index        = index++;
+			rknn_inputs_[index].size         = tensor.numel();
+			rknn_inputs_[index].fmt          = RKNN_TENSOR_NHWC;
+			rknn_inputs_[index].pass_through = 0;
+			rknn_inputs_[index].buf          = input;
+            rknn_inputs_[index].index        = index;
+            index++;
         }
     }
-    RET_CHECKER(rknn_inputs_set(ctx_, io_num_.n_input, inputs));
-    RET_CHECKER(rknn_run(ctx_, NULL));
+    RET_CHECKER(rknn_inputs_set(ctx_, io_num_.n_input, rknn_inputs_.data()));
+
     rknn_output outputs[io_num_.n_output];
     for (int i = 0; i < io_num_.n_output; i++) {
         outputs[i].index       = i;
@@ -146,7 +150,10 @@ Status RknnEngine::run(const ExecContext& context) {
         outputs[i].size        = otensors[i].numel()*otensors[i].itemsize();
         outputs[i].buf         = otensors[i].data();
     }
+    RET_CHECKER(rknn_run(ctx_, NULL));
     RET_CHECKER(rknn_outputs_get(ctx_, io_num_.n_output, outputs, NULL));
+    RET_CHECKER(rknn_outputs_release(ctx_, io_num_.n_output, outputs));
+    
     return absl::OkStatus();
 }
 

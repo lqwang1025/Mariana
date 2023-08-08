@@ -15,6 +15,25 @@
 
 namespace mariana {
 
+static float sigmoid(float x) {
+    return 1 / (1+expf(-x));
+}
+
+static std::vector<float> softmax(float* data, int n) {
+    std::vector<float> res;
+    res.reserve(n);
+    float sum = 0.f;
+    for (int i = 0; i < n; ++i) {
+        res.push_back(expf(data[i]));
+        sum += res[i];
+    }
+    for (int i = 0; i < n; ++i) {
+        res[i] /= sum;
+    }
+    
+    return res;
+}
+
 static float iou_of(const Rect& a, const Rect& b) {
 	float max_x = std::max(a.tl.x, b.tl.x);
 	float max_y = std::max(a.tl.y, b.tl.y);
@@ -92,27 +111,26 @@ result_list Yolov8OnePostProcessor::work(tensor_list&& inputs, ExecContext& cont
 }
 
 result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& context) {
+    /*
+	 * output shape like: 1x8400x81 (81=4*16+nc)
+	 * 8400 = 80x80+40x40+20x20
+	 */
     result_list results;
     float* buffer = static_cast<float*>(inputs[0].data());
-	float* cls_buf = static_cast<float*>(inputs[1].data());
-    Shape shape1 = inputs[0].shape(); // [1, 8400, 4]
-    Shape shape2 = inputs[1].shape(); // [1, 8400, 17]
+    Shape shape1 = inputs[0].shape(); // [1, 8400, 81]
     int nb = shape1[0];
-    int ng = shape1[2];
-    int nc = shape2[2];
+    int nc = shape1[2]-4*16;
     for (int n = 0; n < nb; ++n) {
         result_list __results;
         for (size_t i = 0; i < option.grids.size(); ++i) {
             for (int h = 0; h < option.grids[i]; ++h) {
-                int h_offset = (h*option.grids[i])<<2;
-                int cls_h_offset = h*option.grids[i]*nc;
+                int h_offset = h*option.grids[i]*(64+nc);
                 for (int w = 0; w < option.grids[i]; ++w) {
-                    int w_offset = w<<2;
-                    int cls_w_offset = w*nc;
+                    int w_offset = w*(64+nc);
                     float max = -FLT_MAX;
                     int index = -1;
                     for (int c = 0; c < nc; ++c) {
-                        float score = cls_buf[cls_h_offset+cls_w_offset+c];
+                        float score = sigmoid(buffer[h_offset+w_offset+64+c]);
                         if (max < score) {
                             max = score;
                             index = c;
@@ -120,14 +138,20 @@ result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& co
                     }
                     if (max < option.conf_thresh) continue;
 				
-                    float x0 = buffer[h_offset+w_offset+0];
-                    float y0 = buffer[h_offset+w_offset+1];
-                    float x1 = buffer[h_offset+w_offset+2];
-                    float y1 = buffer[h_offset+w_offset+3];
-                    x0 = static_cast<float>(w) - x0 + option.grid_offset;
-                    y0 = static_cast<float>(h) - y0 + option.grid_offset;
-                    x1 = static_cast<float>(w) + x1 + option.grid_offset;
-                    y1 = static_cast<float>(h) + y1 + option.grid_offset;
+                    float coordinate[4] ={0.f};
+                    for (int n = 0; n < 4; ++n) {
+                        int n_offset = n*16;
+                        std::vector<float> softmaxed = softmax(buffer+h_offset+w_offset+n_offset, 16);
+                        float sum = 0.f;
+                        for (int dfln = 0; dfln < 16; ++dfln) {
+                            sum += dfln*softmaxed[dfln];
+                        }
+                        coordinate[n] = sum;
+                    } 
+                    float x0 = static_cast<float>(w) - coordinate[0] + option.grid_offset;
+                    float y0 = static_cast<float>(h) - coordinate[1] + option.grid_offset;
+                    float x1 = static_cast<float>(w) + coordinate[2] + option.grid_offset;
+                    float y1 = static_cast<float>(h) + coordinate[3] + option.grid_offset;
                     MResult result;
                     result.batch_idx  = n;
                     result.cls_idx    = index;
@@ -140,8 +164,7 @@ result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& co
                     __results.push_back(result);
                 }
             }
-            buffer += (option.grids[i]*option.grids[i]<<2);
-            cls_buf += (option.grids[i]*option.grids[i]*nc);
+            buffer += (option.grids[i]*option.grids[i]*(64+nc));
         }
         nms(__results, option.iou_thresh);
         results.insert(results.end(), __results.begin(), __results.end());

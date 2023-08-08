@@ -16,7 +16,7 @@
 
 namespace mariana {
 
-constexpr size_t gAlignment = 64;
+constexpr size_t gAlignment = 16;
 
 } // namespace mariana
 
