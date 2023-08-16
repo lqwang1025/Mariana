@@ -35,7 +35,7 @@ static float iou_of(const mariana::Rect& a, const mariana::Rect& b) {
 static void nms(result_list& dets, float iou_thresh) {
 	result_list results;
 	while (!dets.empty()) {
-		std::sort(dets.begin(), dets.end(), [&](mariana::MResult& a, mariana::MResult& b) {return a.score < b.score;});
+		std::sort(dets.begin(), dets.end(), [&](mariana::MResult& a, mariana::MResult& b) {return a.score > b.score;});
 		results.push_back(dets[0]);
 		for (auto it = dets.begin()+1; it != dets.end(); ++it) {
 			float iou = iou_of(dets[0].bbox, it->bbox);
@@ -129,14 +129,14 @@ cv::Mat letterbox(cv::Mat &src, int h, int w, mariana::ExecContext& context, boo
 }
 
 int main(int argv, const char* argc[]) {
-    const int imgsz = 800;
+    const int imgsz = 640;
     mariana::ConvertContext ccontext;
     ccontext.ishapes.insert({"Conv_3", {1, 3, imgsz, imgsz}});
-    ccontext.model_path = "../models/yolov8x_silu.plan";
+    ccontext.model_path = "../models/yolov8l_relu.plan";
     ccontext.back_end   = mariana::Backend::TRT;
-    ccontext.procategory = mariana::ProcessorCategory::YOLOV8_POST_ONE_OUTPUT;
+    //ccontext.procategory = mariana::ProcessorCategory::YOLOV8_POST_ONE_OUTPUT;
     ccontext.iou_thresh = 0.6f;
-    ccontext.conf_thresh = 0.25f;
+    ccontext.conf_thresh = 0.01f;
     //ccontext.from_scratch = true;
     ccontext.labels = {"flame",
                        "flame_fu",
@@ -173,14 +173,16 @@ int main(int argv, const char* argc[]) {
     printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 1000);
     
     gettimeofday(&start_time, NULL);
-    for (int i  = 0; i < 10; ++i ) {
+    for (int i  = 0; i < 100; ++i ) {
         runtime.run_with(econtext);
         std::vector<mariana::MResult> results =  yolov8_post(econtext, ccontext);
     }
     gettimeofday(&stop_time, NULL);
-    printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 10000);
+    printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 100000);
     
     for (auto& it : results) {
+        std::cout<<"d:"<<it.score<<std::endl;
+        if (it.score <= 0.25f) continue;
 		cv::rectangle(src, cv::Rect(it.bbox.tl.x, it.bbox.tl.y, it.bbox.w(), it.bbox.h()), cv::Scalar(0, 0, 255), 4);
         cv::putText(src, it.class_name, cv::Point(it.bbox.tl.x, it.bbox.tl.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(114,114,114), 2, 8, false);
 	}
