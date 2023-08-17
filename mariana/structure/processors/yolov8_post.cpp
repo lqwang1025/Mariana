@@ -98,14 +98,20 @@ result_list Yolov8OnePostProcessor::work(tensor_list&& inputs, ExecContext& cont
             result.cls_idx    = index;
             result.class_name = option.labels[index];
             result.score      = max;
-            result.bbox.tl.x  = (cx - w/2 - context.pad_w)/context.scale;
-            result.bbox.tl.y  = (cy - h/2 - context.pad_h)/context.scale;
-            result.bbox.br.x  = (cx + w/2 - context.pad_w)/context.scale;
-            result.bbox.br.y  = (cy + h/2 - context.pad_h)/context.scale;
+            result.bbox.tl.x  = (cx - w/2 - context.pad_w)/context.scale+index*600;
+			result.bbox.tl.y  = (cy - h/2 - context.pad_h)/context.scale+index*600;
+			result.bbox.br.x  = (cx + w/2 - context.pad_w)/context.scale+index*600;
+			result.bbox.br.y  = (cy + h/2 - context.pad_h)/context.scale+index*600;
             __results.push_back(result);
         }
         nms(__results, option.iou_thresh);
-        results.insert(results.end(), __results.begin(), __results.end());
+        for (auto& it : __results) {
+            it.bbox.tl.x -= it.cls_idx*600;
+            it.bbox.tl.y -= it.cls_idx*600;
+            it.bbox.br.x -= it.cls_idx*600;
+            it.bbox.br.y -= it.cls_idx*600;
+            results.push_back(it);
+        }
     }
     return results;
 }
@@ -157,17 +163,23 @@ result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& co
                     result.cls_idx    = index;
                     result.class_name = option.labels[index];
                     result.score      = max;
-                    result.bbox.tl.x  = (x0*(option.strides[i])-context.pad_w)/context.scale;
-					result.bbox.tl.y  = (y0*(option.strides[i])-context.pad_h)/context.scale;
-					result.bbox.br.x  = (x1*(option.strides[i])-context.pad_w)/context.scale;
-					result.bbox.br.y  = (y1*(option.strides[i])-context.pad_h)/context.scale;
-                    __results.push_back(result);
+					result.bbox.tl.x  = (x0*(option.strides[i])-context.pad_w)/context.scale+index*600;
+					result.bbox.tl.y  = (y0*(option.strides[i])-context.pad_h)/context.scale+index*600;
+					result.bbox.br.x  = (x1*(option.strides[i])-context.pad_w)/context.scale+index*600;
+					result.bbox.br.y  = (y1*(option.strides[i])-context.pad_h)/context.scale+index*600;
+					__results.push_back(result);
                 }
             }
             buffer += (option.grids[i]*option.grids[i]*(64+nc));
         }
         nms(__results, option.iou_thresh);
-        results.insert(results.end(), __results.begin(), __results.end());
+        for (auto& it : __results) {
+            it.bbox.tl.x -= it.cls_idx*600;
+            it.bbox.tl.y -= it.cls_idx*600;
+            it.bbox.br.x -= it.cls_idx*600;
+            it.bbox.br.y -= it.cls_idx*600;
+            results.push_back(it);
+        }
     }
     return results;
 }

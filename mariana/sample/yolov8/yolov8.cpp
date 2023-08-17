@@ -72,7 +72,7 @@ result_list yolov8_post(mariana::ExecContext& context, const mariana::ConvertCon
                 }
             }
             if (max < option.conf_thresh) continue;
-
+            
             float cx = static_cast<float*>(tensor.input)[nstride+gstride+0];
 			float cy = static_cast<float*>(tensor.input)[nstride+gstride+1];
 			float w	 = static_cast<float*>(tensor.input)[nstride+gstride+2];
@@ -82,14 +82,20 @@ result_list yolov8_post(mariana::ExecContext& context, const mariana::ConvertCon
             result.cls_idx    = index;
             result.class_name = option.labels[index];
             result.score      = max;
-            result.bbox.tl.x  = (cx - w/2 - context.pad_w)/context.scale;
-            result.bbox.tl.y  = (cy - h/2 - context.pad_h)/context.scale;
-            result.bbox.br.x  = (cx + w/2 - context.pad_w)/context.scale;
-            result.bbox.br.y  = (cy + h/2 - context.pad_h)/context.scale;
+            result.bbox.tl.x  = (cx - w/2 - context.pad_w)/context.scale+index*600;
+            result.bbox.tl.y  = (cy - h/2 - context.pad_h)/context.scale+index*600;
+            result.bbox.br.x  = (cx + w/2 - context.pad_w)/context.scale+index*600;
+            result.bbox.br.y  = (cy + h/2 - context.pad_h)/context.scale+index*600;
             __results.push_back(result);
         }
         nms(__results, option.iou_thresh);
-        results.insert(results.end(), __results.begin(), __results.end());
+        for (auto& it : __results) {
+            it.bbox.tl.x -= it.cls_idx*600;
+            it.bbox.tl.y -= it.cls_idx*600;
+            it.bbox.br.x -= it.cls_idx*600;
+            it.bbox.br.y -= it.cls_idx*600;
+            results.push_back(it);
+        }
     }
     return results;    
 }
@@ -136,7 +142,7 @@ int main(int argv, const char* argc[]) {
     ccontext.back_end   = mariana::Backend::TRT;
     //ccontext.procategory = mariana::ProcessorCategory::YOLOV8_POST_ONE_OUTPUT;
     ccontext.iou_thresh = 0.6f;
-    ccontext.conf_thresh = 0.01f;
+    ccontext.conf_thresh = 0.2f;
     //ccontext.from_scratch = true;
     ccontext.labels = {"flame",
                        "flame_fu",
@@ -156,7 +162,7 @@ int main(int argv, const char* argc[]) {
     mariana::Runtime runtime(ccontext);
     
     mariana::ExecContext econtext;
-    cv::Mat src = cv::imread("./165.jpg");
+    cv::Mat src = cv::imread("./20230616_171127_火灾_38体育馆马道南侧_sample.jpg");
     cv::Mat resized = letterbox(src, imgsz, imgsz, econtext);
     cv::Mat input = cv::dnn::blobFromImage(resized, 0.00392157d/*scale*/, cv::Size(), cv::Scalar(), /*swapRB*/false);
     mariana::MTensor tensor;
@@ -181,10 +187,10 @@ int main(int argv, const char* argc[]) {
     printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 100000);
     
     for (auto& it : results) {
-        std::cout<<"d:"<<it.score<<std::endl;
-        if (it.score <= 0.25f) continue;
+        std::cout<<"detect:"<<it.class_name<<" "<<it.score<<std::endl;
+        // if (it.score <= 0.522f) continue;
 		cv::rectangle(src, cv::Rect(it.bbox.tl.x, it.bbox.tl.y, it.bbox.w(), it.bbox.h()), cv::Scalar(0, 0, 255), 4);
-        cv::putText(src, it.class_name, cv::Point(it.bbox.tl.x, it.bbox.tl.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(114,114,114), 2, 8, false);
+        cv::putText(src, it.class_name, cv::Point(it.bbox.tl.x, it.bbox.tl.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,0), 2, 8, false);
 	}
     cv::imwrite("res.jpg", src);
     return 0;
