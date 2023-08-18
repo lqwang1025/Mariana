@@ -50,7 +50,7 @@ static float iou_of(const Rect& a, const Rect& b) {
 static void nms(result_list& dets, float iou_thresh) {
 	result_list results;
 	while (!dets.empty()) {
-		std::sort(dets.begin(), dets.end(), [&](MResult& a, MResult& b) {return a.score < b.score;});
+		std::sort(dets.begin(), dets.end(), [&](MResult& a, MResult& b) {return a.score > b.score;});
 		results.push_back(dets[0]);
 		for (auto it = dets.begin()+1; it != dets.end(); ++it) {
 			float iou = iou_of(dets[0].bbox, it->bbox);
