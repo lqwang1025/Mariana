@@ -132,6 +132,10 @@ struct MTensor { // It hold external data pointer only, is not responsible for f
         device = DeviceType::CPU;
     }
     ~MTensor() {}
+    // Pointer dst is pre-allocated memory by yourself, if pass dst=nullptr, this function will
+    // allocate memory internal and return it, if pass dst!=nullptr, it will not allocate memory,
+    // and dst as the retrun value. whether or not pass the dst, you should free the return value.
+    void* to_cpu(void* dst=nullptr) const;
     std::vector<int32_t> shape;
     void* input;
     TypeMeta dtype;

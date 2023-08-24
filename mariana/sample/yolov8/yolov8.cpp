@@ -53,6 +53,15 @@ static void nms(result_list& dets, float iou_thresh) {
 result_list yolov8_post(mariana::ExecContext& context, const mariana::ConvertContext& option) {
     result_list results;
     mariana::MTensor tensor = context.otensors[0];
+    float* buffer = nullptr;
+    if (tensor.device == mariana::DeviceType::CPU) {
+        buffer = static_cast<float*>(tensor.input);
+    } else if (tensor.device == mariana::DeviceType::CUDA) {
+        buffer = static_cast<float*>(tensor.to_cpu());
+    } else {
+        abort();
+    }
+    
     std::vector<int> shape  = tensor.shape;
     int nb = shape[0];
     int ng = shape[1];
@@ -65,7 +74,7 @@ result_list yolov8_post(mariana::ExecContext& context, const mariana::ConvertCon
             float max = -FLT_MAX;
             int index = -1;
             for (int c = 4; c < nc; ++c) {
-                float score = static_cast<float*>(tensor.input)[nstride+gstride+c];
+                float score = buffer[nstride+gstride+c];
                 if (max < score) {
                     max = score;
                     index = c-4;
@@ -73,10 +82,10 @@ result_list yolov8_post(mariana::ExecContext& context, const mariana::ConvertCon
             }
             if (max < option.conf_thresh) continue;
             
-            float cx = static_cast<float*>(tensor.input)[nstride+gstride+0];
-			float cy = static_cast<float*>(tensor.input)[nstride+gstride+1];
-			float w	 = static_cast<float*>(tensor.input)[nstride+gstride+2];
-			float h	 = static_cast<float*>(tensor.input)[nstride+gstride+3];
+            float cx = buffer[nstride+gstride+0];
+			float cy = buffer[nstride+gstride+1];
+			float w	 = buffer[nstride+gstride+2];
+			float h	 = buffer[nstride+gstride+3];
             mariana::MResult result;
             result.batch_idx  = n;
             result.cls_idx    = index;
@@ -97,6 +106,7 @@ result_list yolov8_post(mariana::ExecContext& context, const mariana::ConvertCon
             results.push_back(it);
         }
     }
+    if (buffer) free(buffer);
     return results;    
 }
 
@@ -134,15 +144,72 @@ cv::Mat letterbox(cv::Mat &src, int h, int w, mariana::ExecContext& context, boo
     return resize_img;
 }
 
+class Classification {
+public:
+    Classification() {
+        mariana::ConvertContext ccontext;
+        ccontext.back_end   = mariana::Backend::TRT;
+        ccontext.model_path = "../models/cls.plan";
+        runtime = new mariana::Runtime(ccontext);
+    }
+
+    ~Classification() {
+        delete runtime;
+    }
+    
+    void run(const cv::Mat& src) {
+        mariana::ExecContext econtext;
+        cv::Mat input = cv::dnn::blobFromImage(src, 0.00392157d/*scale*/, cv::Size(imgsz, imgsz), cv::Scalar(), /*swapRB*/true);
+        mariana::MTensor tensor;
+        tensor.shape  = {1, 3, imgsz, imgsz};
+        tensor.dtype  = mariana::TypeMeta::make<float>();
+        tensor.input  = input.data;
+        tensor.device = mariana::DeviceType::CPU;
+        econtext.itensors.clear();
+        econtext.itensors.insert({"x.1", tensor});
+        runtime->run_with(econtext);
+        mariana::MTensor& otensor = econtext.otensors[0];
+        float max = -FLT_MAX;
+        int index = -1;
+
+        float* buffer = nullptr;
+        if (otensor.device == mariana::DeviceType::CPU) {
+            buffer = static_cast<float*>(otensor.input);
+        } else if (otensor.device == mariana::DeviceType::CUDA) {
+            buffer = static_cast<float*>(otensor.to_cpu(outptr));
+        } else {
+            abort();
+        }
+        
+        for (int i = 0; i < 7; ++i) {
+            float score = buffer[i];
+            if (max < score) {
+                max = score;
+                index = i;
+            }
+        }
+        if (labels[index] == "车辆") {
+            cv::imwrite("car_"+std::to_string(count++)+".jpg", src);
+        }
+        std::cout<<"cls res:"<<labels[index]<<" "<<max<<std::endl;
+    }
+    int count = 0;
+    float outptr[7] = {0};
+    mariana::Runtime* runtime = nullptr;
+    const int imgsz = 224;
+    std::vector<std::string> labels = {"背景", "行人", "施工机械", "车辆", "火焰", "低照度膨胀火", "烟雾"};
+
+};
+
 int main(int argv, const char* argc[]) {
-    const int imgsz = 640;
+    const int imgsz = 800;
     mariana::ConvertContext ccontext;
     ccontext.ishapes.insert({"Conv_3", {1, 3, imgsz, imgsz}});
-    ccontext.model_path = "../models/yolov8l_relu.plan";
+    ccontext.model_path = "../models/yolov8x_relu.plan";
     ccontext.back_end   = mariana::Backend::TRT;
-    //ccontext.procategory = mariana::ProcessorCategory::YOLOV8_POST_ONE_OUTPUT;
+    ccontext.procategory = mariana::ProcessorCategory::YOLOV8_POST_ONE_OUTPUT;
     ccontext.iou_thresh = 0.6f;
-    ccontext.conf_thresh = 0.2f;
+    ccontext.conf_thresh = 0.3f;
     //ccontext.from_scratch = true;
     ccontext.labels = {"flame",
                        "flame_fu",
@@ -162,36 +229,116 @@ int main(int argv, const char* argc[]) {
     mariana::Runtime runtime(ccontext);
     
     mariana::ExecContext econtext;
-    cv::Mat src = cv::imread("./20230616_171127_火灾_38体育馆马道南侧_sample.jpg");
-    cv::Mat resized = letterbox(src, imgsz, imgsz, econtext);
-    cv::Mat input = cv::dnn::blobFromImage(resized, 0.00392157d/*scale*/, cv::Size(), cv::Scalar(), /*swapRB*/false);
-    mariana::MTensor tensor;
-    tensor.shape  = {1, 3, imgsz, imgsz};
-    tensor.dtype  = mariana::TypeMeta::make<float>();
-    tensor.input  = input.data;
-    tensor.device = mariana::DeviceType::CPU;
-    econtext.itensors.insert({"images", tensor});
-    struct timeval start_time, stop_time;
-    gettimeofday(&start_time, NULL);
-    runtime.run_with(econtext);
-    std::vector<mariana::MResult> results =  yolov8_post(econtext, ccontext);
-    gettimeofday(&stop_time, NULL);
-    printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 1000);
-    
-    gettimeofday(&start_time, NULL);
-    for (int i  = 0; i < 100; ++i ) {
-        runtime.run_with(econtext);
-        std::vector<mariana::MResult> results =  yolov8_post(econtext, ccontext);
-    }
-    gettimeofday(&stop_time, NULL);
-    printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 100000);
-    
-    for (auto& it : results) {
-        std::cout<<"detect:"<<it.class_name<<" "<<it.score<<std::endl;
-        // if (it.score <= 0.522f) continue;
-		cv::rectangle(src, cv::Rect(it.bbox.tl.x, it.bbox.tl.y, it.bbox.w(), it.bbox.h()), cv::Scalar(0, 0, 255), 4);
-        cv::putText(src, it.class_name, cv::Point(it.bbox.tl.x, it.bbox.tl.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,0), 2, 8, false);
+
+    cv::VideoCapture vc;
+    vc.open("job_leave.mp4");
+    if (!vc.isOpened()) {
+		printf("could not read this video file...\n");
+		return -1;
 	}
-    cv::imwrite("res.jpg", src);
+    cv::Mat frame;
+    cv::Size S = cv::Size((int)vc.get(cv::CAP_PROP_FRAME_WIDTH),
+                          (int)vc.get(cv::CAP_PROP_FRAME_HEIGHT));
+    int fps = vc.get(cv::CAP_PROP_FPS);
+    //cv::VideoWriter writer("res.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), fps, S, true);
+    int count = 0;
+
+    Classification cls;
+    
+    while(vc.isOpened()) {
+        bool ret = vc.grab();
+        count++;
+        if (!ret) continue;
+        //if ( count%20 != 0) continue;
+        ret = vc.retrieve(frame);
+        std::cout<<"ss:"<<ret<<" "<<frame.size()<<std::endl;
+        cv::Mat resized = letterbox(frame, imgsz, imgsz, econtext);
+        cv::Mat input = cv::dnn::blobFromImage(resized, 0.00392157d/*scale*/, cv::Size(), cv::Scalar(), /*swapRB*/false);
+        mariana::MTensor tensor;
+        tensor.shape  = {1, 3, imgsz, imgsz};
+        tensor.dtype  = mariana::TypeMeta::make<float>();
+        tensor.input  = input.data;
+        tensor.device = mariana::DeviceType::CPU;
+        econtext.itensors.clear();
+        econtext.itensors.insert({"images", tensor});
+        runtime.run_with(econtext);
+        // std::cout<<results.size()<<std::endl;
+        std::vector<mariana::MResult> results = yolov8_post(econtext, ccontext);
+        int pc = 0;
+        for (auto& it : results) {
+            //std::cout<<"detect:"<<it.class_name<<" "<<it.score<<std::endl;
+            if (it.class_name != "person") continue;
+            cv::Rect roi(it.bbox.tl.x, it.bbox.tl.y, it.bbox.w(), it.bbox.h());
+            cv::Mat person = frame(roi);
+            cls.run(person);
+            //cv::imwrite("person"+std::to_string(count++)+std::to_string(pc++)+".jpg", person);
+            cv::rectangle(frame, roi, cv::Scalar(0, 0, 255), 4);
+            cv::putText(frame, it.class_name+":"+std::to_string(it.score), cv::Point(it.bbox.tl.x, it.bbox.tl.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,0), 2, 8, false);
+        }
+        //cv::imwrite("test"+std::to_string(count)+".jpg", frame);
+        //writer.write(frame);
+    }
+    // while (vc.read(frame)) {
+	// 	// imshow("camera-demo", frame);
+	// 	// writer.write(frame);
+	// 	// char c = waitKey(50);
+	// 	// if (c == 27) {
+	// 	// 	break;
+	// 	// }
+    //     cv::Mat resized = letterbox(frame, imgsz, imgsz, econtext);
+    //     cv::Mat input = cv::dnn::blobFromImage(resized, 0.00392157d/*scale*/, cv::Size(), cv::Scalar(), /*swapRB*/false);
+    //     mariana::MTensor tensor;
+    //     tensor.shape  = {1, 3, imgsz, imgsz};
+    //     tensor.dtype  = mariana::TypeMeta::make<float>();
+    //     tensor.input  = input.data;
+    //     tensor.device = mariana::DeviceType::CPU;
+    //     econtext.itensors.clear();
+    //     econtext.itensors.insert({"images", tensor});
+    //     std::vector<mariana::MResult> results = runtime.run_with(econtext);
+    //     // std::cout<<results.size()<<std::endl;
+    //      // =  yolov8_post(econtext, ccontext);
+    //     for (auto& it : results) {
+    //         //std::cout<<"detect:"<<it.class_name<<" "<<it.score<<std::endl;
+    //         // if (it.score <= 0.522f) continue;
+    //         cv::rectangle(frame, cv::Rect(it.bbox.tl.x, it.bbox.tl.y, it.bbox.w(), it.bbox.h()), cv::Scalar(0, 0, 255), 4);
+    //         cv::putText(frame, it.class_name+":"+std::to_string(it.score), cv::Point(it.bbox.tl.x, it.bbox.tl.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,0), 2, 8, false);
+    //     }
+    //     writer.write(frame);
+    //     //cv::imwrite("res/test"+std::to_string(count++)+".jpg", frame);
+        
+	// }
+    vc.release();
+//    writer.release();
+    // cv::Mat src = cv::imread("./20230620_145856_火灾_74体育馆西门外球机_sample.jpg");
+    // cv::Mat resized = letterbox(src, imgsz, imgsz, econtext);
+    // cv::Mat input = cv::dnn::blobFromImage(resized, 0.00392157d/*scale*/, cv::Size(), cv::Scalar(), /*swapRB*/false);
+    // mariana::MTensor tensor;
+    // tensor.shape  = {1, 3, imgsz, imgsz};
+    // tensor.dtype  = mariana::TypeMeta::make<float>();
+    // tensor.input  = input.data;
+    // tensor.device = mariana::DeviceType::CPU;
+    // econtext.itensors.insert({"images", tensor});
+    // struct timeval start_time, stop_time;
+    // gettimeofday(&start_time, NULL);
+    // runtime.run_with(econtext);
+    // std::vector<mariana::MResult> results =  yolov8_post(econtext, ccontext);
+    // gettimeofday(&stop_time, NULL);
+    // printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 1000);
+    
+    // gettimeofday(&start_time, NULL);
+    // for (int i  = 0; i < 100; ++i ) {
+    //     std::vector<mariana::MResult> results = runtime.run_with(econtext);
+    //     //std::vector<mariana::MResult> results =  yolov8_post(econtext, ccontext);
+    // }
+    // gettimeofday(&stop_time, NULL);
+    // printf("once run use %f ms\n", (__get_us(stop_time) - __get_us(start_time)) / 100000);
+    
+    // for (auto& it : results) {
+    //     std::cout<<"detect:"<<it.class_name<<" "<<it.score<<std::endl;
+    //     // if (it.score <= 0.522f) continue;
+	// 	cv::rectangle(src, cv::Rect(it.bbox.tl.x, it.bbox.tl.y, it.bbox.w(), it.bbox.h()), cv::Scalar(0, 0, 255), 4);
+    //     cv::putText(src, it.class_name, cv::Point(it.bbox.tl.x, it.bbox.tl.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,0), 2, 8, false);
+	// }
+    // cv::imwrite("res.jpg", src);
     return 0;
 }

@@ -14,8 +14,43 @@
 #include <core/utils/logging.h>
 #include <structure/ir.h>
 #include <structure/graph_exec.h>
+#ifdef WITH_CUDA
+#include <cuda_runtime_api.h>
+#endif
 
 namespace mariana {
+
+void* MTensor::to_cpu(void* dst) const {
+    int bsize = 1;
+    for (auto& it : this->shape) {
+        bsize*=it;
+    }
+    bsize*=dtype.itemsize();
+    if (this->device == DeviceType::CPU) {
+        if (dst == nullptr) {
+            void* ptr = malloc(bsize);
+            memcpy(ptr, this->input, bsize);
+            return ptr;
+        } else {
+            memcpy(dst, this->input, bsize);
+            return dst;
+        }
+        
+    } else if (this->device == DeviceType::CUDA) {
+#ifdef WITH_CUDA
+        if (dst == nullptr) {
+            void* ptr = malloc(bsize);
+            cudaMemcpy(ptr, this->input, bsize, cudaMemcpyDeviceToHost);
+            return ptr;
+        } else {
+            cudaMemcpy(dst, this->input, bsize, cudaMemcpyDeviceToHost);
+            return dst;
+        }
+#else
+        MLOG(FATAL)<<"Mariana compiling is not with CUDA!";
+#endif
+    }
+}
 
 Runtime::Runtime(const ConvertContext& ccontext) {
     mariana::Graph* graph = mariana::parse(ccontext);
