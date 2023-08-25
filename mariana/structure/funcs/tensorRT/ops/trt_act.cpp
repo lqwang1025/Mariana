@@ -22,11 +22,8 @@ bool TensorRTEngine::_add_act_node(const Node& node, const ConvertContext& conte
     MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
     nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
     auto act_type_chose = [&]()->nvinfer1::ActivationType {
-        if (node.op_type() == MRELU) {
-            return nvinfer1::ActivationType::kRELU;
-        } else {
-            MLOG(FATAL)<<"Unsupport act type:"<<node.op_type();
-        }
+        ActivationFunction* func = static_cast<ActivationFunction*>(node.op());
+        return static_cast<nvinfer1::ActivationType>(func->option.act_type);
     };
     nvinfer1::IActivationLayer* layer = network_->addActivation(*itensor, act_type_chose());
     layer->setName(node.name().c_str());

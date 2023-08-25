@@ -30,7 +30,8 @@ namespace mariana { namespace onnx {
 #define KConcat "Concat"
 #define KResize "Resize"
 #define KTranspose "Transpose"
-        
+#define kReduceMean "ReduceMean"
+
 // Math node
 #define KAdd "Add"
 #define KMul "Mul"

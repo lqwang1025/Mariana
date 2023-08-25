@@ -20,9 +20,16 @@
 
 namespace mariana {
 
+enum class MathType : int8_t {
+    UNINIT = -1,
+    kSUM = 0,
+    kMUL = 1,
+};
+    
 struct MathOption : public BaseOption {
     MathOption() {}
     ~MathOption() {}
+    MathType math_type = MathType::UNINIT;
 };
 
 struct MathFunction : public Function {

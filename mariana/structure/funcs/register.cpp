@@ -25,6 +25,7 @@
 #include <structure/funcs/resize.h>
 #include <structure/funcs/permute.h>
 #include <structure/funcs/slice.h>
+#include <structure/funcs/reduce.h>
 
 namespace mariana {
 
@@ -52,6 +53,7 @@ void register_funcs() {
     ADD_FUNC(CONCAT, ConcatFunction);
     ADD_FUNC(RESIZE, ResizeFunction);
     ADD_FUNC(PERMUTE, PermuteFunction);
+    ADD_FUNC(REDUCEMEAN, ReduceFunction);
 }
 #undef ADD_FUNC
 

@@ -52,6 +52,7 @@ private:
     bool _add_reshape_node(const Node& node, const ConvertContext& context);
     bool _add_softmax_node(const Node& node, const ConvertContext& context);
     bool _add_fc_node(const Node& node, const ConvertContext& context);
+    bool _add_reduce_node(const Node& node, const ConvertContext& context);
     
 private:
     const std::string input_prefix_ = "_minput";
@@ -64,12 +65,15 @@ private:
     std::unordered_map<std::string, TrtLayerMake> layer_make_map_ = {
         {MCONV2D, &TensorRTEngine::_add_convolution_node},
         {MRELU, &TensorRTEngine::_add_act_node},
+        {MSIGMOID, &TensorRTEngine::_add_act_node},
         {MMAXPOOL, &TensorRTEngine::_add_pool_node},
         {MADD, &TensorRTEngine::_add_eltwise_node},
+        {MMUL, &TensorRTEngine::_add_eltwise_node},
         {MGAVPOOL, &TensorRTEngine::_add_pool_node},
         {MRESHAPE, &TensorRTEngine::_add_reshape_node},
         {MSOFTMAX, &TensorRTEngine::_add_softmax_node},
         {MGEMM, &TensorRTEngine::_add_fc_node},
+        {MREDUCEMEAN, &TensorRTEngine::_add_reduce_node},
         
     };
     std::unordered_map<std::string, nvinfer1::ITensor*> nvtensor_map_;

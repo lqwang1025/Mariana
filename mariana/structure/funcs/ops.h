@@ -29,6 +29,7 @@ namespace mariana {
 #define MRESIZE "RESIZE"
 #define MPERMUTE "PERMUTE"
 #define MSLICE "SLICE"
+#define MREDUCEMEAN "REDUCEMEAN"
 
 //Math op
 #define MADD "ADD"

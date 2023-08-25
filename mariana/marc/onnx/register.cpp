@@ -34,6 +34,7 @@ void register_converter() {
     ADD_CONVERT(Relu, ActConverter);
     ADD_CONVERT(Gemm, GemmConverter);
     ADD_CONVERT(Softmax, SoftmaxConverter);
+    ADD_CONVERT(ReduceMean, ReduceConverter);
 }
 #undef ADD_CONVERT
 

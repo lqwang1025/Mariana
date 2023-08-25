@@ -36,6 +36,7 @@ std::map<std::string, std::string> ONNX_OP_MAP_TO_MAR = {
     {KConcat, MCONCAT},
     {KResize, MRESIZE},
     {KTranspose, MPERMUTE},
+    {kReduceMean, MREDUCEMEAN},
 };
 
 }} // namespace mariana::onnx

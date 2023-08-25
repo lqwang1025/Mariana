@@ -22,8 +22,11 @@ bool TensorRTEngine::_add_eltwise_node(const Node& node, const ConvertContext& c
     MCHECK(inputs.size()==2)<<node.op_type()<<" support 2 inputs only.";
     
     auto eltwise_type_chose = [&]()->nvinfer1::ElementWiseOperation {
-        if (node.op_type() == MADD) {
+        MathFunction* func = static_cast<MathFunction*>(node.op());
+        if (func->option.math_type == MathType::kSUM) {
             return nvinfer1::ElementWiseOperation::kSUM;
+        } else if (func->option.math_type == MathType::kMUL) {
+            return nvinfer1::ElementWiseOperation::kPROD;
         } else {
             MLOG(FATAL)<<"Unsupport act type:"<<node.op_type();
         }
