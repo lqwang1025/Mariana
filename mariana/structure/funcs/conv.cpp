@@ -31,7 +31,6 @@ ShapeList ConvFunction::infer_shape(ShapeList shapes) {
     int h = ishape[2], w = ishape[3];
     int out_c = option.oc;
     int out_h, out_w;
-
     /* handle the same padding case, which pad_h0 and pad_h1 is -1 (SAME_UPPER)
        -2 (SAME_LOWER) */
     if (pads[0] < 0) {
@@ -42,30 +41,30 @@ ShapeList ConvFunction::infer_shape(ShapeList shapes) {
 
         if (pads[0] == -1) {
             option.pads[0] = pad_num / 2;
-            option.pads[1] = pad_num - pad_num / 2;
+            option.pads[2] = pad_num - pad_num / 2;
         } else {
-            option.pads[1] = pad_num / 2;
+            option.pads[2] = pad_num / 2;
             option.pads[0] = pad_num - pad_num / 2;
         }
     } else {
-        out_h = (h - dilations[0] * (kernel_shape[0] - 1) - 1 + pads[0] + pads[1]) / strides[0] + 1;
+        out_h = (h - dilations[0] * (kernel_shape[0] - 1) - 1 + pads[0] + pads[2]) / strides[0] + 1;
     }
 
-    if (pads[2] < 0) {
+    if (pads[1] < 0) {
         out_w = (w - 1) / kernel_shape[1] + 1;
         int total_len = (out_w - 1) * strides[1] + kernel_shape[1];
 
         int pad_num = total_len - w;
 
         if (pads[2] == -1) {
-            option.pads[2] = pad_num / 2;
+            option.pads[1] = pad_num / 2;
             option.pads[3] = pad_num - pad_num / 2;
         } else {
             option.pads[3] = pad_num / 2;
-            option.pads[2] = pad_num - pad_num / 2;
+            option.pads[1] = pad_num - pad_num / 2;
         }
     } else {
-        out_w = (w - dilations[1] * (kernel_shape[1] - 1) - 1 + pads[2] + pads[3]) / strides[1] + 1;
+        out_w = (w - dilations[1] * (kernel_shape[1] - 1) - 1 + pads[1] + pads[3]) / strides[1] + 1;
     }
     return {{n, out_c, out_h, out_w}};
 }

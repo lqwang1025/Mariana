@@ -19,11 +19,14 @@ tensor_list MathFunction::compute(tensor_list&& inputs) {
 }
 
 ShapeList MathFunction::infer_shape(ShapeList shapes) {
-    MCHECK(shapes.size() == 2)<<"Now add only support 2 input:"<<shapes.size();
+    MCHECK(shapes.size() == 2)<<"Now math only support 2 input:"<<shapes.size();
     const Shape& ashape = shapes[0];
     const Shape& bshape = shapes[1];
-    MCHECK(ashape == bshape)<<"A shape must equal with b shape :"<<ashape<<" "<<bshape;
-    return {ashape};
+    if (ashape.size() > bshape.size()) {
+        return {ashape};
+    } else {
+        return {bshape};
+    }
 }
 
 } // namespace mariana

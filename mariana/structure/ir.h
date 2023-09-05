@@ -41,7 +41,10 @@ public:
 
     Node() {}
     
-    Node(NodeIndex index, Graph& graph) : index_(index), graph_(&graph), func_(nullptr) {}
+    Node(NodeIndex index, Graph& graph) : index_(index), graph_(&graph), func_(nullptr) {
+        oshapes_.clear();
+        otensors_.clear();
+    }
 
     Node(const Node& rhs) {
         this->operator=(rhs);
@@ -91,6 +94,9 @@ public:
  
     void pre_run(ShapeList shapes) {
         oshapes_ = func_->infer_shape(shapes);
+        /* for (auto& it : oshapes_) { */
+        /*     std::cout<<"Infer shape:"<<name()<<" "<<it<<std::endl; */
+        /* } */
         float flops = func_->compute_FLOPs(oshapes_);
         // std::cout<<"debug:"<<name()<<" "<<flops<<std::endl;
     }

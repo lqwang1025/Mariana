@@ -27,6 +27,7 @@ public:
     ~GraphExec() {}
     void run(Graph& graph, ExecContext& context);
     void pre_run(Graph& graph, ExecContext& context);
+    void pre_run(Graph& graph, const ConvertContext& context);
     result_list results;
 };
 

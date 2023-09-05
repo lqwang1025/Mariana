@@ -52,4 +52,21 @@ void GraphExec::pre_run(Graph& graph, ExecContext& context) {
     }
 }
 
+void GraphExec::pre_run(Graph& graph, const ConvertContext& context) {
+    for (auto& node : graph.nodes()) {
+        auto inputs = node->inputs();
+        if (inputs.size() == 0) {
+            node->pre_run({Shape{context.ishapes.at(node->name())}});
+        } else {
+            ShapeList shapes;
+            for (auto& it : inputs) {
+                shapes.insert(shapes.end(), it->shapes().begin(),
+                              it->shapes().end());
+            }
+            node->pre_run(shapes);
+        }
+    }
+}
+
+
 } // namespace mariana

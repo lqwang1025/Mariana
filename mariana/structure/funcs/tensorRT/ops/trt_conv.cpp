@@ -54,13 +54,18 @@ bool TensorRTEngine::_add_convolution_node(const Node& node, const ConvertContex
     nvinfer1::IConvolutionLayer* layer = network_->addConvolutionNd(*itensor, oc, kernel_size, weight, bias);
 
     layer->setStride(nvinfer1::DimsHW(func->option.strides[0], func->option.strides[1]));
-    layer->setPrePadding(nvinfer1::DimsHW(func->option.pads[0], func->option.pads[2]));
-    layer->setPostPadding(nvinfer1::DimsHW(func->option.pads[1], func->option.pads[3]));
+    layer->setPrePadding(nvinfer1::DimsHW(func->option.pads[0], func->option.pads[1]));
+    layer->setPostPadding(nvinfer1::DimsHW(func->option.pads[2], func->option.pads[3]));
     layer->setDilation(nvinfer1::DimsHW(func->option.dilations[0], func->option.dilations[1]));
     layer->setNbGroups(func->option.group);
 
     layer->setName(node.name().c_str());
     nvtensor_map_[node.name()] = layer->getOutput(0);
+
+
+    auto dims = layer->getOutput(0)->getDimensions();
+    auto dim = itensor->getDimensions();
+    
     return true;
 }
 

@@ -94,7 +94,7 @@ Status base_fold_reshape_to_node(Graph& graph) {
     replace_matching_optypes(graph,
                              {"*",
                                  {
-                                     {MRESHAPE, {{"*"}}}
+                                     {"RESHAPE|FLATTEN", {{"*"}}}
                                  }
                              }, func, &replaced_graph);
     graph = replaced_graph;

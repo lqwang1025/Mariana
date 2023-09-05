@@ -23,6 +23,8 @@ namespace mariana {
 struct FlattenOption : public BaseOption {
     FlattenOption() {}
     ~FlattenOption() {}
+    int32_t axis;
+    int32_t end_axis;
 };
 
 struct FlattenFunction : public Function {

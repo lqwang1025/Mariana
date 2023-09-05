@@ -34,13 +34,15 @@ bool TensorRTEngine::_add_reduce_node(const Node& node, const ConvertContext& co
     uint32_t reduceAxes = 0;
     for (auto& it : func->option.axes) {
         int flag = 1;
-        flag = flag << (it-1);
+        flag = flag << it;
         reduceAxes += flag;
     }
     nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
     nvinfer1::IReduceLayer* layer = network_->addReduce(*itensor, reduce_type_chose(), reduceAxes, func->option.keepdims);
     layer->setName(node.name().c_str());
     nvtensor_map_[node.name()] = layer->getOutput(0);
+    auto dims = layer->getOutput(0)->getDimensions();
+    auto dim = itensor->getDimensions();
     return true;
 }
 
