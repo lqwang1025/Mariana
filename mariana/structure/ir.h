@@ -94,9 +94,9 @@ public:
  
     void pre_run(ShapeList shapes) {
         oshapes_ = func_->infer_shape(shapes);
-        /* for (auto& it : oshapes_) { */
-        /*     std::cout<<"Infer shape:"<<name()<<" "<<it<<std::endl; */
-        /* } */
+        for (auto& it : oshapes_) {
+            std::cout<<"Infer shape:"<<name()<<" "<<it<<std::endl;
+        }
         float flops = func_->compute_FLOPs(oshapes_);
         // std::cout<<"debug:"<<name()<<" "<<flops<<std::endl;
     }

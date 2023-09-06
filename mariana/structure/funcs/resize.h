@@ -21,9 +21,38 @@
 
 namespace mariana {
 
+enum class ResizeCoordinateTransformationMode : uint8_t {
+    None = 0,
+    AlignCorners = 1,
+    Asymmetric = 2,
+    HalfPixel = 3
+};
+
+enum class ResizeMode : uint8_t {
+    None = 0,
+    Nearest = 1,
+    Linear = 2
+};
+
+enum class ResizeRoundMode : uint8_t {
+    None = 0,
+    //! Round half up.
+    HalfUp = 1,
+    //! Round half down.
+    HalfDown = 2,
+    //! Round to floor.
+    Floor = 3,
+    //! Round to ceil.
+    Ceil = 4,
+};
+
 struct ResizeOption : public BaseOption {
     ResizeOption() {}
     ~ResizeOption() {}
+    ResizeMode resize_mode = ResizeMode::None;
+    ResizeCoordinateTransformationMode resize_coordinate_transformation_mode = ResizeCoordinateTransformationMode::None;
+    ResizeRoundMode resize_round_mode = ResizeRoundMode::None;
+    std::vector<float> scales;
 };
 
 struct ResizeFunction : public Function {

@@ -22,10 +22,10 @@
 namespace mariana {
 
 struct SplitOption : public BaseOption {
-    SplitOption() {
-    }
-    ~SplitOption() {
-    }
+    SplitOption() {}
+    ~SplitOption() {}
+    int32_t axis = -1;
+    std::vector<int32_t> split;
 };
 
 struct SplitFunction : public Function {

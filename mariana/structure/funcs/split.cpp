@@ -18,7 +18,12 @@ tensor_list SplitFunction::compute(tensor_list&& inputs) {
 }
 
 ShapeList SplitFunction::infer_shape(ShapeList shapes) {
+    MCHECK(shapes.size() == 1)<<"Now split only support 1 input:"<<shapes.size();
+    const Shape& ishape = shapes[0];
+    int32_t axis = option.axis;
     
+    
+    return {ishape};
 }
 
 } // namespace mariana

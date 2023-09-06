@@ -10,11 +10,16 @@
  */
 
 #include <marc/onnx/register.h>
+#include <structure/funcs/split.h>
+#include <marc/onnx/proto/onnx_help.h>
+#include <core/utils/logging.h>
 
 namespace mariana { namespace onnx {
 
-void SplitConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
-    
+void SplitConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope& scope) {
+    SplitFunction* func = static_cast<SplitFunction*>(dst.op());
+    GET_ONNX_NODE_ATTR(src, "axis", &func->option.axis);
+    GET_ONNX_NODE_ATTR(src, "split", &func->option.split);
 }
 
 }} // namespace mariana::onnx
