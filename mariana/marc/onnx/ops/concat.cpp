@@ -10,11 +10,14 @@
  */
 
 #include <marc/onnx/register.h>
+#include <structure/funcs/concat.h>
+#include <marc/onnx/proto/onnx_help.h>
 
 namespace mariana { namespace onnx {
 
-void ConcatConverter::run(const ::onnx::NodeProto&, Node&, const OnnxScope&) {
-    
+void ConcatConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope& scope) {
+    ConcatFunction* func = static_cast<ConcatFunction*>(dst.op());
+    GET_ONNX_NODE_ATTR(src, "axis", &func->option.axis);
 }
 
 }} // namespace mariana::onnx

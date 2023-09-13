@@ -26,6 +26,10 @@ struct SliceOption : public BaseOption {
     }
     ~SliceOption() {
     }
+    int32_t begin = -1;
+    int32_t end = -1;
+    int32_t axis = -1;
+    int32_t step = 1;
 };
 
 struct SliceFunction : public Function {

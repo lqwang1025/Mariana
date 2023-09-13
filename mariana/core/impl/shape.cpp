@@ -26,13 +26,11 @@ Shape& Shape::set(ArrayRef<int32_t> shape) {
 Shape& Shape::set(IntArrayRef shape) {
     MCHECK(shape.size() <= MAX_DIMS)<<"Shape max dims is "<<MAX_DIMS
                                     <<" your shape dims is"<<shape.size();
-    size_ = 1;
     for (size_t i = 0; i < shape.size(); ++i) {
         if (MAR_UNLIKELY(shape[i] < 0)) {
             MLOG(FATAL)<<"Shape do not support negtive value:"<<i<<" "<<shape[i];
         }
         shape_[i] = shape[i];
-        size_ *= shape_[i];
     }
     dims_ = shape.size();
     return *this;

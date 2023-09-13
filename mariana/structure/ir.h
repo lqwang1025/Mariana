@@ -127,9 +127,12 @@ public:
         explicit EdgeEnd(Node* node) noexcept;
         Node* get_node() const noexcept { return node_; }
         int get_index() const { return index_; }
+        int get_ctrl_index() const { return ctrl_index_; }
+        void set_ctrl_index(int ctrl_index) { ctrl_index_ = ctrl_index; }
     private:
         Node* node_ = nullptr;
         const int index_ = INT_MAX;
+        int ctrl_index_ = 0;
     };
 
     struct EdgeEndCompare {
@@ -142,6 +145,14 @@ public:
     };
     using EdgeSet = std::set<EdgeEnd, EdgeEndCompare>;
 
+    EdgeSet input_edges() const {
+        return relationships_.input_edges;
+    }
+    
+    EdgeSet output_edges() const {
+        return relationships_.output_edges;
+    }
+    
     class Relationships {
     public:
         Relationships() { clear(); }

@@ -35,6 +35,7 @@ DECLARE_ONNX_CONVERTER_CLASS(GemmConverter);
 DECLARE_ONNX_CONVERTER_CLASS(SoftmaxConverter);
 DECLARE_ONNX_CONVERTER_CLASS(ReduceConverter);
 DECLARE_ONNX_CONVERTER_CLASS(FlattenConverter);
+DECLARE_ONNX_CONVERTER_CLASS(SliceConverter);
 
 }} // namespace mariana::onnx
 

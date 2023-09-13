@@ -168,13 +168,29 @@ void OnnxScope::update(const ::onnx::GraphProto& graph) {
 static void build_link(Graph* graph, const OnnxScope& scope) {
     Scope my_scope(graph);
     for (auto& it : graph->nodes()) {
-        auto& nodes = scope.nodes_info.at(it->name()).nodes;
+        auto& node = scope.graph_info.node_name_map.at(it->name()); // Node in ONNX
+        auto& nodes = scope.nodes_info.at(it->name()).nodes; // Inputs
+        std::set<std::string> inputs;
+        for (size_t i = 0; i < node->input_size(); ++i) {
+            inputs.insert(node->input(i));
+        }
+        
         for (size_t i = 0; i < nodes.size(); ++i) { // input
             std::shared_ptr<Node> i_node = my_scope.node_name_map[nodes[i]->name()];
             Node::EdgeEnd i_edge(i_node, static_cast<int>(i));
-            it->relationships().input_edges.insert(i_edge);
-            
             Node::EdgeEnd o_edge(it, static_cast<int>(i_node->relationships().output_edges.size()));
+            for (size_t ii = 0; ii < nodes[i]->output_size(); ++ii) {
+                auto fit = inputs.find(nodes[i]->output(ii));
+                if (fit != inputs.end()) {
+                    
+                    inputs.erase(fit);
+                    i_edge.set_ctrl_index(ii);
+                    o_edge.set_ctrl_index(ii);
+                    break;
+                }
+            }
+            
+            it->relationships().input_edges.insert(i_edge);
             i_node->relationships().output_edges.insert(o_edge);
         }
     }

@@ -29,7 +29,7 @@ void ConvConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope
     for (int i = 1; i < src.input_size(); ++i) {
         const ::onnx::TensorProto* weight = scope.graph_info.tensor_name_map.at(src.input(i));
         std::vector<int64_t> shape;
-        void* content;
+        void* content = nullptr;
         get_content_from_tensor(*weight, shape, &content);
         Tensor t;
         t.set_shape(shape);
@@ -40,6 +40,9 @@ void ConvConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope
             float* data = t.mutable_data<float>();
             memcpy(data, content, t.numel()*t.itemsize());
             break;
+        }
+        default: {
+            MLOG(FATAL)<<"Mar Fatal: unsupport data type in slice.";
         }
         }
         func->option.weights.push_back(t);

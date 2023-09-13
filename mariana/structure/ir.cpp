@@ -93,16 +93,22 @@ void Scope::sort_by_exe_order(Graph *graph) {
 
 std::ostream& operator<<(std::ostream& out, const Graph& graph) {
     for (auto& node : graph.nodes()) {
-        out<<"NodeName:"<<node->name()<<" OPType:"<<node->op_type()<<std::endl;
-        for (auto& input : node->inputs()) {
+        out<<"NodeName:"<<node->name()<<" index:"<<node->index()
+           <<" OPType:"<<node->op_type()<<std::endl;
+        for (auto& input : node->input_edges()) {
+            Node* inode = input.get_node();
             out<<"    ---->InputName:"
-               <<input->name()<<" OPType:"<<input->op_type()<<std::endl;;
+               <<inode->name()<<" ctrl_index:"<<input.get_ctrl_index()
+               <<" OPType:"<<inode->op_type()<<std::endl;
         }
-        for (auto& output : node->outputs()) {
+        for (auto& output : node->output_edges()) {
+            Node* onode = output.get_node();
             out<<"    ---->OutputName:"
-               <<output->name()<<" OPType:"<<output->op_type()<<std::endl;;
+               <<onode->name()<<" ctrl_index:"<<output.get_ctrl_index()
+               <<" OPType:"<<onode->op_type()<<std::endl;
         }
     }
+    
     return out;
 }
 

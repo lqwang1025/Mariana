@@ -20,7 +20,7 @@ constexpr size_t MAX_DIMS = 8;
 
 class Shape final {
 public:
-    Shape() : dims_(0), size_(0) {
+    Shape() : dims_(0) {
         memset(shape_, 0, sizeof(int64_t)*MAX_DIMS);
     }
     ~Shape()=default;
@@ -66,12 +66,21 @@ public:
         return dims_ == 0;
     }
     int64_t size() const {
-        return size_;
+        int64_t size = 1;
+        for (size_t i = 0; i < dims_; ++i) {
+            size *= shape_[i];
+        }
+        return size;
     }
     bool equals(const Shape& rhs) const {
         return make_arrayref(shape_, dims_)==make_arrayref(rhs.shape_, rhs.dims_);
     }
     int64_t operator[](uint8_t idx) const {
+        MCHECK(idx<dims_)<<"Shape out of range: idx:"<<(int)idx
+                         <<" dims_:"<<dims_;
+        return shape_[idx];
+    }
+    int64_t& operator[](uint8_t idx) {
         MCHECK(idx<dims_)<<"Shape out of range: idx:"<<(int)idx
                          <<" dims_:"<<dims_;
         return shape_[idx];
@@ -90,7 +99,6 @@ public:
 private:
     int64_t shape_[MAX_DIMS];
     size_t dims_;
-    int64_t size_;
 };
 
 std::ostream& operator<<(std::ostream& out, const Shape& shape);

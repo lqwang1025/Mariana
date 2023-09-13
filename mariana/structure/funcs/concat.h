@@ -26,6 +26,7 @@ struct ConcatOption : public BaseOption {
     }
     ~ConcatOption() {
     }
+    int32_t axis = -1;
 };
 
 struct ConcatFunction : public Function {

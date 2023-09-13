@@ -36,6 +36,7 @@ void register_converter() {
     ADD_CONVERT(Softmax, SoftmaxConverter);
     ADD_CONVERT(ReduceMean, ReduceConverter);
     ADD_CONVERT(Flatten, FlattenConverter);
+    ADD_CONVERT(Slice, SliceConverter);
 }
 #undef ADD_CONVERT
 

@@ -38,14 +38,15 @@ void GraphExec::run(Graph& graph, ExecContext& context) {
 
 void GraphExec::pre_run(Graph& graph, ExecContext& context) {
     for (auto& node : graph.nodes()) {
-        auto inputs = node->inputs();
+        auto inputs = node->input_edges();
         if (inputs.size() == 0) {
             node->pre_run({Shape{context.itensors.at(node->name()).shape}});
         } else {
             ShapeList shapes;
             for (auto& it : inputs) {
-                shapes.insert(shapes.end(), it->shapes().begin(),
-                              it->shapes().end());
+                Node* inode = it.get_node();
+                int ctrl_index = it.get_ctrl_index();
+                shapes.push_back(inode->shapes()[ctrl_index]);
             }
             node->pre_run(shapes);
         }
@@ -54,14 +55,15 @@ void GraphExec::pre_run(Graph& graph, ExecContext& context) {
 
 void GraphExec::pre_run(Graph& graph, const ConvertContext& context) {
     for (auto& node : graph.nodes()) {
-        auto inputs = node->inputs();
+        auto inputs = node->input_edges();
         if (inputs.size() == 0) {
             node->pre_run({Shape{context.ishapes.at(node->name())}});
         } else {
             ShapeList shapes;
             for (auto& it : inputs) {
-                shapes.insert(shapes.end(), it->shapes().begin(),
-                              it->shapes().end());
+                Node* inode = it.get_node();
+                int ctrl_index = it.get_ctrl_index();
+                shapes.push_back(inode->shapes()[ctrl_index]);
             }
             node->pre_run(shapes);
         }

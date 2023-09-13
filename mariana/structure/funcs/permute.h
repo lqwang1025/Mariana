@@ -20,8 +20,13 @@
 namespace mariana {
 
 struct PermuteOption : public BaseOption {
-    PermuteOption() {}
-    ~PermuteOption() {}
+    PermuteOption() {
+        perm.clear();
+    }
+    ~PermuteOption() {
+        perm.clear();
+    }
+    std::vector<int32_t> perm;
 };
 
 struct PermuteFunction : public Function {

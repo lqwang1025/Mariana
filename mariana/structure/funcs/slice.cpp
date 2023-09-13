@@ -10,6 +10,8 @@
  */
 
 #include <structure/funcs/slice.h>
+#include <core/utils/logging.h>
+#include <core/utils/arrary_ref.h>
 
 namespace mariana {
 
@@ -18,7 +20,8 @@ tensor_list SliceFunction::compute(tensor_list&& inputs) {
 }
 
 ShapeList SliceFunction::infer_shape(ShapeList shapes) {
-    
+    std::cout<<"dd:"<<option.begin<<" "<<option.end<<" "
+             <<option.step<<" "<<option.axis<<std::endl;
 }
 
 } // namespace mariana
