@@ -17,6 +17,7 @@
 
 #include <structure/function.h>
 #include <structure/func_option.h>
+#include <structure/tensor.h>
 
 namespace mariana {
 
@@ -24,12 +25,15 @@ enum class MathType : int8_t {
     UNINIT = -1,
     kSUM = 0,
     kMUL = 1,
+    kDIV = 2,
+    kSUB = 3
 };
     
 struct MathOption : public BaseOption {
     MathOption() {}
     ~MathOption() {}
     MathType math_type = MathType::UNINIT;
+    Tensor weight;
 };
 
 struct MathFunction : public Function {

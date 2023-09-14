@@ -59,7 +59,7 @@ bool GraphMatcher::_does_optype_match(const Node& node, const OpTypePattern& pat
         }
     }
     if (!pattern_matched) {
-        MVLOG(1) << "node.op() != pattern.op"
+        MVLOG(1) << "node.op() != pattern.op "
                  << node.op_type()<<" "<<pattern.op;
         return false;
     }
@@ -85,8 +85,7 @@ bool GraphMatcher::_does_optype_match(const Node& node, const OpTypePattern& pat
         const Node& input_node = *(scope_.node_name_map[input_node_name]);
         const OpTypePattern& input_pattern = pattern.inputs[i];
         match->inputs.push_back(NodeMatch());
-        NodeMatch* input_match = &(match->inputs.back());
-        if (!_does_optype_match(input_node, input_pattern, previously_matched_nodes,
+        NodeMatch* input_match = &(match->inputs.back());        if (!_does_optype_match(input_node, input_pattern, previously_matched_nodes,
                                 input_match)) {
             return false;
         }
@@ -144,6 +143,7 @@ Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
         new_nodes.push_back(node);
     }
     dst->nodes() = new_nodes;
+    std::cout<<"dd:"<<*dst<<std::endl;
     Scope::sort_by_exe_order(dst);
     return status;
 }

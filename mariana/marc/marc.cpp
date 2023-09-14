@@ -44,7 +44,6 @@ Graph* parse(const ConvertContext& context) {
             if (context.from_scratch) { // To construct network form onnx by us.
                 std::shared_ptr<trt::TensorRTEngine> engine{new trt::TensorRTEngine()};
                 Graph* graph = onnx::parse(context.model_path);
-                std::cout<<"G:"<<*graph<<std::endl;
                 GraphExec ge;
                 ge.pre_run(*graph, context);
                 transform::transform(*graph, {"base_fold_reshape_to_node"});

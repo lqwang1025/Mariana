@@ -21,6 +21,8 @@ void register_converter() {
     ADD_CONVERT(Default, DefaultConverter);
     ADD_CONVERT(Add, MathConverter);
     ADD_CONVERT(Mul, MathConverter);
+    ADD_CONVERT(Sub, MathConverter);
+    ADD_CONVERT(Div, MathConverter);
     ADD_CONVERT(Concat, ConcatConverter);
     ADD_CONVERT(MaxPool, PoolConverter);
     ADD_CONVERT(GlobalAveragePool, PoolConverter);

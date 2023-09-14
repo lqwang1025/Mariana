@@ -19,14 +19,21 @@ tensor_list MathFunction::compute(tensor_list&& inputs) {
 }
 
 ShapeList MathFunction::infer_shape(ShapeList shapes) {
-    MCHECK(shapes.size() == 2)<<"Now math only support 2 input:"<<shapes.size();
-    const Shape& ashape = shapes[0];
-    const Shape& bshape = shapes[1];
-    if (ashape.size() > bshape.size()) {
+    if (shapes.size() == 2) {
+        const Shape& ashape = shapes[0];
+        const Shape& bshape = shapes[1];
+        if (ashape.size() > bshape.size()) {
+            return {ashape};
+        } else {
+            return {bshape};
+        }
+    } else if (shapes.size() == 1) {
+        const Shape& ashape = shapes[0];
         return {ashape};
     } else {
-        return {bshape};
+        MLOG(FATAL)<<"Unsupport in Add shape inference input size:"<<shapes.size();
     }
+    
 }
 
 } // namespace mariana

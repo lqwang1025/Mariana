@@ -42,6 +42,7 @@ Status base_fold_reshape_to_node(Graph& graph) {
          *  build link for:  AnyNode  
          *                    / | \
          */
+        std::cout<<"ddd:"<<new_node->name()<<std::endl;
         for (auto& output : new_node->outputs()) {
             for (size_t i = 0; i < output->inputs().size(); ++i) {
                 if (output->inputs()[i]->name() == new_node->name()) {
