@@ -10,6 +10,7 @@
  */
 
 #include <NvInferRuntime.h>
+#include <NvInferPlugin.h>
 #include <NvOnnxParser.h>
 #include <cuda_runtime_api.h>
 #include <logging.h>
@@ -87,6 +88,8 @@ Status TensorRTEngine::de_serialize(Graph& graph, const ConvertContext& context)
     if (runtime==nullptr) {
         return absl::InternalError("Create TRT IRuntime failed.");
     }
+    bool didInitPlugins = initLibNvInferPlugins(&gLogger, "");
+    MCHECK(didInitPlugins)<<"Init nvinfer plugins failed.";
     engine_.reset(runtime->deserializeCudaEngine(data.get(), length));
     if (engine_==nullptr) {
         return absl::InternalError("Create TRT ICudaEngine failed.");
