@@ -14,101 +14,98 @@
 
 namespace mariana {
 
-Node::EdgeEnd::EdgeEnd(std::shared_ptr<Node>& node, int index) noexcept : node_(node.get()),
-                                                                          index_(index) {}
-
-Node::EdgeEnd::EdgeEnd(Node* node, int index) noexcept : node_(node),
-                                                         index_(index) {}
-
-Node::EdgeEnd::EdgeEnd(std::shared_ptr<Node>& node) noexcept : EdgeEnd(node, INT_MAX) {}
-
-Node::EdgeEnd::EdgeEnd(Node* node) noexcept : EdgeEnd(node, INT_MAX) {}
-
-std::shared_ptr<Node> Graph::make_node() {
-    MCHECK(nodes_.size() < static_cast<unsigned int>(std::numeric_limits<int>::max()));
-    std::shared_ptr<Node> new_node(new Node(nodes_.size(), *this));
-    nodes_.push_back(new_node);
-    return new_node;
-}
-
-Node& Graph::add_node(const std::string& name, const std::string& op_type) {
-    std::shared_ptr<Node> node = make_node();
-    node->init(name, op_type);
-    return *node;
-}
-
-void Scope::init(Graph *graph) {
-    node_name_map.clear();
-    for (auto it : graph->nodes()) {
-        node_name_map.insert({it->name(), it});
+std::vector<std::shared_ptr<Node>> inodes_of(std::shared_ptr<Node>& node) {
+    std::vector<std::shared_ptr<Node>> nodes;
+    for (auto& it : node->inputs()) {
+        nodes.push_back(node->graph()->node(it));
     }
+    return nodes;
 }
 
-using NodeInputs = std::unordered_map<std::string, std::vector<std::string>>;
-using NodeMap = std::unordered_map<std::string, std::shared_ptr<Node>>;
-
-static void _sort_by_exe_order(const Graph *graph, NodeInputs& node_in,
-                               std::vector<std::shared_ptr<Node>>& order_nodes,
-                               std::set<std::string>& visited) {
-    if (node_in.empty()) return;
-    size_t node_size = graph->num_of_nodes();
-    for (size_t i = 0; i < node_size; ++i) {
-        if (visited.count(graph->nodes(i)->name()) == 1) continue;
-        if (node_in.at(graph->nodes(i)->name()).size() == 0) { // input node
-            order_nodes.push_back(graph->nodes(i));
-            visited.insert(graph->nodes(i)->name());
-            node_in.erase(graph->nodes(i)->name());
-            for (auto& it : node_in) {
-                for (auto iter = it.second.begin(); iter != it.second.end(); ++iter) {
-                    if (*iter == graph->nodes(i)->name()) {
-                        iter = it.second.erase(iter);
-                        iter--;
-                    }
-                }
+std::vector<std::shared_ptr<Node>> onodes_of(std::shared_ptr<Node>& node) {
+    std::vector<std::shared_ptr<Node>> nodes;
+    for (auto& it : node->graph()->order()) {
+        for (auto& input : it->inputs()) {
+            if (input == node->name()) {
+                nodes.push_back(it);
             }
         }
     }
-    _sort_by_exe_order(graph, node_in, order_nodes, visited);
+    return nodes;
 }
 
-void Scope::sort_by_exe_order(Graph *graph) {
-    NodeInputs node_inputs;
-    NodeMap _node_name_map;
-    for (auto it : graph->nodes()) {
-        _node_name_map.insert({it->name(), it});
-    }
-    for (auto& it : graph->nodes()) {
-        std::vector<std::string> inputs;
-        for (auto& input : it->inputs()) {
-            inputs.push_back(input->name());
+Node& Graph::new_node(const std::string& name, const std::string& op_type) {
+    MCHECK(node_map_.size() < static_cast<unsigned int>(std::numeric_limits<int>::max()))<<"Grpah ";
+    std::shared_ptr<Node> node(new Node(*this));
+    node->init(name, op_type);
+    node_map_[name] = node;
+    return *node;
+}
+
+using NodeInputs = std::unordered_map<std::string, std::vector<std::string>>;
+void _sort_by_exe_order(std::unordered_map<std::string,
+                        std::shared_ptr<Node>>& node_map, NodeInputs& node_in,
+                        std::vector<std::shared_ptr<Node>>& order_nodes,
+                               std::set<std::string>& visited) {
+    if (node_in.empty()) return;
+    for (auto& it : node_map) {
+        if (visited.count(it.first) == 1) continue;
+        if (node_in.at(it.first).size() == 0) { // input node
+            order_nodes.push_back(it.second);
+            visited.insert(it.first);
+            node_in.erase(it.first);
+            for (auto& itt : node_in) {
+                   for (auto iter = itt.second.begin(); iter != itt.second.end(); ++iter) {
+                       if (*iter == it.first) {
+                           iter = itt.second.erase(iter);
+                           iter--;
+                       }
+                   }
+            }
         }
-        node_inputs.insert({it->name(), inputs});
+    }
+    _sort_by_exe_order(node_map, node_in, order_nodes, visited);
+}
+
+Graph& Graph::finilize() {
+    NodeInputs node_inputs;
+    for (auto& it : node_map_) {
+        node_inputs.insert({it.first, it.second->inputs()});
+    }
+    std::set<std::string> visited;
+    std::unordered_map<std::string, std::shared_ptr<Node>> node_map = node_map_;
+    nodes_.clear();
+    _sort_by_exe_order(node_map_, node_inputs, nodes_, visited);
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& out, const Node& node) {
+    out<<"Node name:["<<node.name_<<"], OpType:["<<node.op_
+       <<"], Graph ptr:["<<node.graph_<<"], Op ptr:["<<node.func_
+       <<"]"<<std::endl;
+    out<<"--->Input names:[";
+    for (size_t i = 0; i < node.inames_.size(); ++i) {
+        out<<node.inames_[i];
+        if (i != node.inames_.size()-1) {
+            out<<", ";
+        }
     }
     
-    std::set<std::string> visited;
-    std::vector<std::shared_ptr<Node>> order_nodes;
-    _sort_by_exe_order(graph, node_inputs, order_nodes, visited);
-    graph->nodes() = order_nodes;
+    out<<"]\n--->Oshapes:";
+    for (auto& it : node.oshapes_) {
+        out<<it;
+    }
+    out<<std::endl;
+    return out;
 }
 
 std::ostream& operator<<(std::ostream& out, const Graph& graph) {
-    for (auto& node : graph.nodes()) {
-        out<<"NodeName:"<<node->name()<<" index:"<<node->index()
-           <<" OPType:"<<node->op_type()<<std::endl;
-        for (auto& input : node->input_edges()) {
-            Node* inode = input.get_node();
-            out<<"    ---->InputName:"
-               <<inode->name()<<" ctrl_index:"<<input.get_ctrl_index()
-               <<" OPType:"<<inode->op_type()<<std::endl;
-        }
-        for (auto& output : node->output_edges()) {
-            Node* onode = output.get_node();
-            out<<"    ---->OutputName:"
-               <<onode->name()<<" ctrl_index:"<<output.get_ctrl_index()
-               <<" OPType:"<<onode->op_type()<<std::endl;
-        }
+    out<<"Graph node size:"<<graph.num_of_nodes()<<" engine:"<<graph.engine_
+       <<" processor:"<<graph.processor_<<" name:"<<graph.name_<<std::endl;
+    std::vector<std::shared_ptr<Node>> orders = graph.order();
+    for (auto& node : orders) {
+        out<<*node;
     }
-    
     return out;
 }
 

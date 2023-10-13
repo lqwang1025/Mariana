@@ -165,37 +165,6 @@ void OnnxScope::update(const ::onnx::GraphProto& graph) {
     nodes_info = init_nodes_info(onnx_model.graph());
 }
 
-static void build_link(Graph* graph, const OnnxScope& scope) {
-    Scope my_scope(graph);
-    for (auto& it : graph->nodes()) {
-        auto& node = scope.graph_info.node_name_map.at(it->name()); // Node in ONNX
-        auto& nodes = scope.nodes_info.at(it->name()).nodes; // Inputs
-        std::set<std::string> inputs;
-        for (size_t i = 0; i < node->input_size(); ++i) {
-            inputs.insert(node->input(i));
-        }
-        
-        for (size_t i = 0; i < nodes.size(); ++i) { // input
-            std::shared_ptr<Node> i_node = my_scope.node_name_map[nodes[i]->name()];
-            Node::EdgeEnd i_edge(i_node, static_cast<int>(i));
-            Node::EdgeEnd o_edge(it, static_cast<int>(i_node->relationships().output_edges.size()));
-            for (size_t ii = 0; ii < nodes[i]->output_size(); ++ii) {
-                auto fit = inputs.find(nodes[i]->output(ii));
-                if (fit != inputs.end()) {
-                    
-                    inputs.erase(fit);
-                    i_edge.set_ctrl_index(ii);
-                    o_edge.set_ctrl_index(ii);
-                    break;
-                }
-            }
-            
-            it->relationships().input_edges.insert(i_edge);
-            i_node->relationships().output_edges.insert(o_edge);
-        }
-    }
-}
-
 Graph* parse(const std::string& name) {
     register_converter();
     OnnxScope onnx_scope(name);
@@ -211,12 +180,29 @@ Graph* parse(const std::string& name) {
         MCHECK(ONNX_OP_MAP_TO_MAR.count(node.op_type()))<<"Mar is not support :[OPTYPE:"
                                                         <<node.op_type()<<"].";
         const std::string& op_type = ONNX_OP_MAP_TO_MAR.at(node.op_type());
-        Node& dst = graph->add_node(node.name(), op_type);
+        Node& dst = graph->new_node(node.name(), op_type);
         convert->run(node, dst, onnx_scope);
+        // 3. Build link on our graph.
+        auto& inodes = onnx_scope.nodes_info.at(node.name()).nodes; // Inputs
+        
+        std::set<std::string> inputs;
+        for (size_t i = 0; i < node.input_size(); ++i) {
+            inputs.insert(node.input(i));
+        }
+        for (size_t i = 0; i < inodes.size(); ++i) { // input
+            size_t ii = 0;
+            for (; ii < inodes[i]->output_size(); ++ii) {
+                auto fit = inputs.find(inodes[i]->output(ii));
+                if (fit != inputs.end()) {
+                    inputs.erase(fit);
+                    break;
+                }
+            }
+            dst.inputs().push_back(inodes[i]->name());
+            dst.ctrl_idx().push_back(ii);
+        }
     }
-
-    // 3. Build link on our graph.
-    build_link(graph, onnx_scope);
+    graph->finilize();
     
     unregister_funcs();
     unregister_converter();

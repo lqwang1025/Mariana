@@ -18,9 +18,9 @@
 namespace mariana { namespace trt {
 
 bool TensorRTEngine::_add_act_node(const Node& node, const ConvertContext& context) {
-    NodeList inputs = node.inputs();
+    std::vector<std::string> inputs = node.inputs();
     MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
-    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
+    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]);
     auto act_type_chose = [&]()->nvinfer1::ActivationType {
         ActivationFunction* func = static_cast<ActivationFunction*>(node.op());
         return static_cast<nvinfer1::ActivationType>(func->option.act_type);

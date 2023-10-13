@@ -17,14 +17,14 @@
 namespace mariana { namespace trt {
 
 bool TensorRTEngine::_add_fc_node(const Node& node, const ConvertContext& context) {
-    NodeList inputs = node.inputs();
+    std::vector<std::string> inputs = node.inputs();
     MCHECK(inputs.size()<2)<<node.op_type()<<" support 1 input only.";
     
     std::string itname;
     if (inputs.size() == 0) {
         itname = node.name()+input_prefix_;
     } else if (inputs.size() == 1) {
-        itname = inputs[0]->name();
+        itname = inputs[0];
     }
     nvinfer1::ITensor* itensor = _get_itensor(itname);
     GemmFunction* func = static_cast<GemmFunction*>(node.op());

@@ -18,7 +18,7 @@
 namespace mariana { namespace trt {
 
 bool TensorRTEngine::_add_eltwise_node(const Node& node, const ConvertContext& context) {
-    NodeList inputs = node.inputs();
+    std::vector<std::string> inputs = node.inputs();
     MCHECK(inputs.size()==2)<<node.op_type()<<" support 2 inputs only.";
     
     auto eltwise_type_chose = [&]()->nvinfer1::ElementWiseOperation {
@@ -31,8 +31,8 @@ bool TensorRTEngine::_add_eltwise_node(const Node& node, const ConvertContext& c
             MLOG(FATAL)<<"Unsupport act type:"<<node.op_type();
         }
     };
-    nvinfer1::ITensor* input1 = _get_itensor(inputs[0]->name());
-    nvinfer1::ITensor* input2 = _get_itensor(inputs[1]->name());
+    nvinfer1::ITensor* input1 = _get_itensor(inputs[0]);
+    nvinfer1::ITensor* input2 = _get_itensor(inputs[1]);
     nvinfer1::IElementWiseLayer* layer = network_->addElementWise(*input1, *input2, eltwise_type_chose());
     layer->setName(node.name().c_str());
     nvtensor_map_[node.name()] = layer->getOutput(0);

@@ -16,9 +16,7 @@
 namespace mariana { namespace transform {
 
 Status base_fold_act_to_node(Graph& graph) {
-    Graph replaced_graph;
-    Scope scope(&graph);
-    auto func = [](Scope& scope, const NodeMatch& match,
+    auto func = [](const NodeMatch& match,
                    std::set<std::string>* old_nodes,
                    std::vector<std::shared_ptr<Node>>* new_nodes) -> Status {
         // const Node& relu_node = match.node;
@@ -33,7 +31,7 @@ Status base_fold_act_to_node(Graph& graph) {
                                  {
                                      {"*"}
                                  }
-                             }, func, &replaced_graph);
+                             }, func);
     return absl::OkStatus();
 }
 

@@ -18,11 +18,11 @@
 namespace mariana { namespace trt {
 
 bool TensorRTEngine::_add_softmax_node(const Node& node, const ConvertContext& context) {
-    NodeList inputs = node.inputs();
+    std::vector<std::string> inputs = node.inputs();
     MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
     SoftmaxFunction* func = static_cast<SoftmaxFunction*>(node.op());
     
-    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
+    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]);
     nvinfer1::ISoftMaxLayer* layer = network_->addSoftMax(*itensor);
     //layer->setAxes(func->option.axis);
     

@@ -29,13 +29,13 @@ struct OpTypePattern {
 
 struct NodeMatch {
     NodeMatch() : node() {}
-    Node node;
+    std::shared_ptr<Node> node = nullptr;
     std::vector<NodeMatch> inputs;
     std::string debug_string() const;
 };
 
 Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
-                                const std::function<Status(Scope& scope, const NodeMatch&, std::set<std::string>*, std::vector<std::shared_ptr<Node>>*)>& node_generator, Graph* dst);
+                                const std::function<Status(const NodeMatch&, std::set<std::string>*, std::vector<std::shared_ptr<Node>>*)>& node_generator);
 
 class GraphMatcher {
 public:
@@ -47,18 +47,11 @@ public:
     // so will be invalid after its lifetime.
     Status get_optype_matches(const OpTypePattern& pattern,
                               std::vector<NodeMatch>* matches);
-    const Scope& scope() const {
-        return scope_;
-    }
-    Scope& scope() {
-        return scope_;
-    }
 private:
-    bool _does_optype_match(const Node& node, const OpTypePattern& pattern,
+    bool _does_optype_match(std::shared_ptr<Node>& node, const OpTypePattern& pattern,
                             const std::set<std::string>& previously_matched_nodes,
                             NodeMatch* match);
     Graph graph_;
-    Scope scope_;
     
 };
 

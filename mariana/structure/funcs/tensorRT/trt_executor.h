@@ -53,6 +53,7 @@ private:
     bool _add_softmax_node(const Node& node, const ConvertContext& context);
     bool _add_fc_node(const Node& node, const ConvertContext& context);
     bool _add_reduce_node(const Node& node, const ConvertContext& context);
+    bool _add_slice_node(const Node& node, const ConvertContext& context);
     
 private:
     const std::string input_prefix_ = "_minput";
@@ -74,7 +75,7 @@ private:
         {MSOFTMAX, &TensorRTEngine::_add_softmax_node},
         {MGEMM, &TensorRTEngine::_add_fc_node},
         {MREDUCEMEAN, &TensorRTEngine::_add_reduce_node},
-        
+        {MSLICE, &TensorRTEngine::_add_slice_node},
     };
     std::unordered_map<std::string, nvinfer1::ITensor*> nvtensor_map_;
 };

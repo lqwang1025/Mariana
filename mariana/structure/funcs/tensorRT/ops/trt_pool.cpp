@@ -18,7 +18,7 @@
 namespace mariana { namespace trt {
 
 bool TensorRTEngine::_add_pool_node(const Node& node, const ConvertContext& context) {
-    NodeList inputs = node.inputs();
+    std::vector<std::string> inputs = node.inputs();
     MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
     PoolFunction* func = static_cast<PoolFunction*>(node.op());
     nvinfer1::Dims kernel_size = {.nbDims = 2,
@@ -34,7 +34,7 @@ bool TensorRTEngine::_add_pool_node(const Node& node, const ConvertContext& cont
         }
     };
 
-    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
+    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]);
     nvinfer1::IPoolingLayer* layer = network_->addPoolingNd(*itensor, pool_type_chose(), kernel_size);
     layer->setStride(nvinfer1::DimsHW{func->option.strides[0], func->option.strides[1]});
     layer->setAverageCountExcludesPadding(false);

@@ -18,11 +18,11 @@
 namespace mariana { namespace trt {
 
 bool TensorRTEngine::_add_reshape_node(const Node& node, const ConvertContext& context) {
-    NodeList inputs = node.inputs();
+    std::vector<std::string> inputs = node.inputs();
     MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
     ReshapeFunction* func = static_cast<ReshapeFunction*>(node.op());
     
-    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
+    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]);
     nvinfer1::IShuffleLayer* layer = network_->addShuffle(*itensor);
     nvinfer1::Dims dims;
     dims.nbDims = func->option.shape.size();

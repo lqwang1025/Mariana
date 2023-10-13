@@ -25,8 +25,9 @@ std::string OpTypePattern::debug_string() const {
 }
 
 std::string NodeMatch::debug_string() const {
+    if (!node) return "{:, {}}";
     std::string result = "{";
-    result += node.name() + ":" + node.op_type();
+    result += node->name() + ":" + node->op_type();
     result += ", {";
     for (const NodeMatch& input : inputs) {
         result += input.debug_string() + ",";
@@ -35,16 +36,16 @@ std::string NodeMatch::debug_string() const {
     return result;
 }
 
-GraphMatcher::GraphMatcher(Graph& graph) : graph_(graph), scope_(&graph) {}
+GraphMatcher::GraphMatcher(Graph& graph) : graph_(graph){}
 
-bool GraphMatcher::_does_optype_match(const Node& node, const OpTypePattern& pattern,
+bool GraphMatcher::_does_optype_match(std::shared_ptr<Node>& node, const OpTypePattern& pattern,
                                       const std::set<std::string>& previously_matched_nodes,
                                       NodeMatch* match) {
-    MVLOG(1) << "Looking at node " << node.name()<<" "<<node.op_type();
+    MVLOG(1) << "Looking at node " << node->name()<<" "<<node->op_type();
     MVLOG(1) << "pattern=" << pattern.debug_string();
     MVLOG(1) << "match=" << match->debug_string();
-    if (previously_matched_nodes.count(node.name())) {
-        MVLOG(1) << "node " << node.name() << " has been previously matched";
+    if (previously_matched_nodes.count(node->name())) {
+        MVLOG(1) << "node " << node->name() << " has been previously matched";
         return false;
     }
     bool pattern_matched = false;
@@ -53,14 +54,14 @@ bool GraphMatcher::_does_optype_match(const Node& node, const OpTypePattern& pat
     } else {
         std::vector<std::string> pattern_ops = absl::StrSplit(pattern.op, '|');
         for (const std::string& pattern_op : pattern_ops) {
-            if (node.op_type() == pattern_op) {
+            if (node->op_type() == pattern_op) {
                 pattern_matched = true;
             }
         }
     }
     if (!pattern_matched) {
-        MVLOG(1) << "node.op() != pattern.op "
-                 << node.op_type()<<" "<<pattern.op;
+        MVLOG(1) << "node->op() != pattern.op "
+                 << node->op_type()<<" "<<pattern.op;
         return false;
     }
     match->node = node;
@@ -69,12 +70,8 @@ bool GraphMatcher::_does_optype_match(const Node& node, const OpTypePattern& pat
         return true;
     }
     // Ignore any control inputs for pattern-matching purposes
-    std::vector<std::string> non_control_inputs;
-    for (auto& input : node.relationships().input_edges) {
-        if (!input.get_node()->name().empty()) {
-            non_control_inputs.push_back(input.get_node()->name());
-        }
-    }
+    std::vector<std::string> non_control_inputs = node->inputs();
+
     if (non_control_inputs.size() != pattern.inputs.size()) {
         MVLOG(1) << "non_control_inputs.size() != pattern.inputs.size() "
                  << non_control_inputs.size()<<" : "<<pattern.inputs.size();
@@ -82,10 +79,11 @@ bool GraphMatcher::_does_optype_match(const Node& node, const OpTypePattern& pat
     }
     for (size_t i = 0; i < pattern.inputs.size(); ++i) {
         const std::string& input_node_name = non_control_inputs[i];
-        const Node& input_node = *(scope_.node_name_map[input_node_name]);
+        auto input_node = graph_.node(input_node_name);
         const OpTypePattern& input_pattern = pattern.inputs[i];
         match->inputs.push_back(NodeMatch());
-        NodeMatch* input_match = &(match->inputs.back());        if (!_does_optype_match(input_node, input_pattern, previously_matched_nodes,
+        NodeMatch* input_match = &(match->inputs.back());
+        if (!_does_optype_match(input_node, input_pattern, previously_matched_nodes,
                                 input_match)) {
             return false;
         }
@@ -95,7 +93,7 @@ bool GraphMatcher::_does_optype_match(const Node& node, const OpTypePattern& pat
 
 static void record_matched_nodes(const NodeMatch& match,
                                  std::set<std::string>* matched_nodes) {
-    matched_nodes->insert(match.node.name());
+    matched_nodes->insert(match.node->name());
     for (const NodeMatch& input_match : match.inputs) {
         record_matched_nodes(input_match, matched_nodes);
     }
@@ -104,13 +102,13 @@ static void record_matched_nodes(const NodeMatch& match,
 Status GraphMatcher::get_optype_matches(const OpTypePattern& pattern,
                                         std::vector<NodeMatch>* matches) {
     std::set<std::string> matched_nodes;
-    for (auto& node : graph_.nodes()) {
+    for (auto& node : graph_.order()) {
         // Skip any nodes that are already part of a match.
         if (matched_nodes.count(node->name())) {
             continue;
         }
         NodeMatch match;
-        if (_does_optype_match(*node, pattern, matched_nodes, &match)) {
+        if (_does_optype_match(node, pattern, matched_nodes, &match)) {
             record_matched_nodes(match, &matched_nodes);
             matches->push_back(match);
         }
@@ -119,7 +117,7 @@ Status GraphMatcher::get_optype_matches(const OpTypePattern& pattern,
 }
 
 Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
-                                const std::function<Status(Scope& scope, const NodeMatch&, std::set<std::string>*, std::vector<std::shared_ptr<Node>>*)>& node_generator, Graph* dst) {
+                                const std::function<Status(const NodeMatch&, std::set<std::string>*, std::vector<std::shared_ptr<Node>>*)>& node_generator) {
     GraphMatcher matcher{src};
     std::vector<NodeMatch> matches;
     Status res = matcher.get_optype_matches(pattern, &matches);
@@ -132,19 +130,21 @@ Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
     std::vector<std::shared_ptr<Node>> new_nodes;
     for (const NodeMatch& match : matches) {
         std::vector<std::shared_ptr<Node>> _new_nodes;
-        status = node_generator(matcher.scope(), match, &old_nodes, &_new_nodes);
+        status = node_generator(match, &old_nodes, &_new_nodes);
         new_nodes.insert(new_nodes.end(), _new_nodes.begin(), _new_nodes.end());
     }
 
-    for (auto& node : src.nodes()) {
+    for (auto& node : src.order()) {
         if (old_nodes.count(node->name())) {
-            continue;
+            src.remove_node(node->name());
         }
-        new_nodes.push_back(node);
     }
-    dst->nodes() = new_nodes;
-    std::cout<<"dd:"<<*dst<<std::endl;
-    Scope::sort_by_exe_order(dst);
+    for (auto& node : new_nodes) {
+        src.update_node(node);
+    }
+    src.finilize();
+    std::cout<<"dd:"<<src<<std::endl;
+    // std::cout<<"dd:"<<*dst<<std::endl;
     return status;
 }
 

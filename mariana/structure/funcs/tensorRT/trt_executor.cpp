@@ -181,7 +181,7 @@ Status TensorRTEngine::_construct_network(Graph& graph, const ConvertContext& co
         nvtensor_map_[itname] = _add_input(shape, itname, nvinfer1::DataType::kFLOAT);
     }
     
-    for (auto& node : graph.nodes()) {
+    for (auto& node : graph.order()) {
         std::cout<<"ddd:"<<node->name()<<std::endl;
         if (layer_make_map_.count(node->op_type())) {
             layer_make_map_[node->op_type()](this, *node, context);

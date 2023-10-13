@@ -31,7 +31,6 @@ class Node;
 class Graph;
 using ShapeList = std::vector<Shape>;
 using NodeList = std::vector<Node*>;
-using NodeIndex = size_t;
 
 class Node {
 public:
@@ -41,9 +40,10 @@ public:
 
     Node() {}
     
-    Node(NodeIndex index, Graph& graph) : index_(index), graph_(&graph), func_(nullptr) {
+    Node(Graph& graph) : graph_(&graph), func_(nullptr) {
         oshapes_.clear();
         otensors_.clear();
+        inames_.clear();
     }
 
     Node(const Node& rhs) {
@@ -52,43 +52,48 @@ public:
 
     Node& operator=(const Node& rhs) {
         if (this == &rhs) return *this;
-        index_ = rhs.index_;
-        graph_ = rhs.graph_;
-        func_ = rhs.func_;
-        op_ = rhs.op_;
-        name_ = rhs.name_;
-        relationships_ = rhs.relationships_;
+        graph_    = rhs.graph_;
+        func_     = rhs.func_;
+        op_       = rhs.op_;
+        name_     = rhs.name_;
+        inames_   = rhs.inames_;
         otensors_ = rhs.otensors_;
-        oshapes_ = rhs.oshapes_;
+        oshapes_  = rhs.oshapes_;
+        ctrl_idx_ = rhs.ctrl_idx_;
         return *this;
     }
     
-    ~Node() {}
-    
-    NodeList inputs() const {
-        NodeList node_list;
-        for (auto& it : relationships_.input_edges) {
-            node_list.push_back(it.get_node());
-        }
-        return node_list;
+    ~Node() {
+        oshapes_.clear();
+        otensors_.clear();
+        inames_.clear();
     }
     
-    NodeList outputs() const {
-        NodeList node_list;
-        for (auto& it : relationships_.output_edges) {
-            node_list.push_back(it.get_node());
-        }
-        return node_list;
+    std::vector<std::string> inputs() const {
+        return inames_;
+    }
+
+    std::vector<std::string>& inputs() {
+        return inames_;
     }
     
-    NodeIndex index() const noexcept { return index_; }
+    std::vector<int32_t> ctrl_idx() const {
+        return ctrl_idx_;
+    }
+
+    std::vector<int32_t>& ctrl_idx() {
+        return ctrl_idx_;
+    }
+
+    Graph* graph() const {
+        return graph_;
+    }
     
     const std::string& name() const noexcept { return name_; }
     
     const std::string& op_type() const noexcept { return op_; }
 
     tensor_list apply(tensor_list&& inputs) {
-        // for (relationships_.input_edges)
         return (*func_)(std::move(inputs));
     }
  
@@ -118,174 +123,116 @@ public:
         MCHECK(func_make!=nullptr)<<"There is no func in registry:"<<op;
         func_.reset(func_make());
     }
-    
-    class EdgeEnd {
-    public:
-        EdgeEnd(std::shared_ptr<Node>& node, int index) noexcept;
-        EdgeEnd(Node* node, int index) noexcept;
-        explicit EdgeEnd(std::shared_ptr<Node>& node) noexcept;
-        explicit EdgeEnd(Node* node) noexcept;
-        Node* get_node() const noexcept { return node_; }
-        int get_index() const { return index_; }
-        int get_ctrl_index() const { return ctrl_index_; }
-        void set_ctrl_index(int ctrl_index) { ctrl_index_ = ctrl_index; }
-    private:
-        Node* node_ = nullptr;
-        const int index_ = INT_MAX;
-        int ctrl_index_ = 0;
-    };
-
-    struct EdgeEndCompare {
-        bool operator()(const EdgeEnd& lhs, const EdgeEnd& rhs) const {
-            if (lhs.get_node()->index() == rhs.get_node()->index()) {
-                return lhs.get_index() < rhs.get_index();
-            }
-            return lhs.get_node()->index() < rhs.get_node()->index();
-        }
-    };
-    using EdgeSet = std::set<EdgeEnd, EdgeEndCompare>;
-
-    EdgeSet input_edges() const {
-        return relationships_.input_edges;
-    }
-    
-    EdgeSet output_edges() const {
-        return relationships_.output_edges;
-    }
-    
-    class Relationships {
-    public:
-        Relationships() { clear(); }
-        ~Relationships() { clear(); }
-        Relationships(const Relationships& rhs) {
-            this->operator=(rhs);
-        }
-        Relationships& operator=(const Relationships& rhs) {
-            if (this == &rhs) return *this;
-            input_edges = rhs.input_edges;
-            output_edges = rhs.output_edges;
-            control_inputs = rhs.control_inputs;
-            return *this;
-        }
-        void clear() noexcept {
-            input_edges.clear();
-            output_edges.clear();
-            control_inputs.clear();
-        }
-        
-        size_t isize() const {
-            return input_edges.size();
-        }
-
-        size_t osize() const {
-            return output_edges.size();
-        }
-        
-        /** The edges for Nodes that provide inputs to this Node. */
-        EdgeSet input_edges;
-        /** The edges for Nodes that receive outputs from this Node. */
-        EdgeSet output_edges;
-        /** The Node names of the control inputs to this Node. */
-        std::set<std::string> control_inputs;
-        
-    };
-    Relationships& relationships() {
-        return relationships_;
-    }
-    void clear_output() {
-        relationships().output_edges.clear();
-    }
-    void update_output(Node* output, int32_t index) {
-        relationships().output_edges.erase({output, index});
-        relationships().output_edges.insert({output, index});
-    }
-    void clear_input() {
-        relationships().input_edges.clear();
-    }
-    void update_input(Node* input, int32_t index) {
-        relationships().input_edges.erase({input, index});
-        relationships().input_edges.insert({input, index});
-    }
-    const Relationships& relationships() const {
-        return relationships_;
-    }
-    friend class Graph;
 private:
-    NodeIndex index_ = std::numeric_limits<NodeIndex>::max();
+    friend class Graph;
+    friend std::ostream& operator<<(std::ostream& out, const Node& node);
     Graph* graph_ = nullptr;
     std::shared_ptr<Function> func_;
     std::string op_ = "";
     std::string name_ = "";
-    Relationships relationships_;
+    std::vector<std::string> inames_;
+    std::vector<int32_t> ctrl_idx_;
     tensor_list otensors_;
-    ShapeList oshapes_;
+    ShapeList oshapes_; // dep
 };
+
+std::ostream& operator<<(std::ostream& out, const Node& node);
 
 class Graph {
 public:
     Graph() {
-        nodes_.clear();
+        node_map_.clear();
     }
+    
     Graph(std::shared_ptr<Engine> engine) : engine_(engine) {
-        nodes_.clear();
+        Graph();
     }
-    ~Graph() {
-        nodes_.clear();
-    }
+
     Graph(const Graph& rhs) {
         this->operator=(rhs);
     }
+    
     Graph& operator=(const Graph& rhs) {
-        if (this == &rhs) {
-            return *this;
-        }
-        nodes_.clear();
-        nodes_ = rhs.nodes_;
-        name_ = rhs.name_;
+        if (&rhs == this) return *this;
+        name_      = rhs.name_;
+        engine_    = rhs.engine_;
+        processor_ = rhs.processor_;
+        node_map_  = rhs.node_map_;
+        nodes_     = rhs.nodes_;
         return *this;
     }
+    
+    ~Graph() {
+        node_map_.clear();
+    }
+    
+    Graph& finilize();
+    
+    Node& new_node(const std::string& name, const std::string& op_type);
+
     std::shared_ptr<Engine> engine() const {
         return engine_;
     }
-    Node& add_node(const std::string& name, const std::string& op_type);
-    std::shared_ptr<Node> make_node();
+    
     size_t num_of_nodes(void) const {
-        return nodes_.size();
+        return node_map_.size();
     }
-    const std::vector<std::shared_ptr<Node>>& nodes() const {
+    
+    std::vector<std::shared_ptr<Node>> order() const {
         return nodes_;
     }
-    std::vector<std::shared_ptr<Node>>& nodes() {
-        return nodes_;
+
+    Graph& update_node(const std::string& name, std::shared_ptr<Node> node) {
+        node_map_[name] = node;
+        return *this;
     }
-    const std::shared_ptr<Node>& nodes(size_t i) const {
-        return nodes_[i];
+
+    Graph& update_node(std::shared_ptr<Node> node) { // update node iteself.
+        node_map_[node->name()] = node;
+        return *this;
     }
-    std::shared_ptr<Node>& nodes(size_t i) {
-        return nodes_[i];
+
+    Graph& remove_node(const std::string& name) {
+        node_map_.erase(name);
+        return *this;
+    }
+
+    Graph& remove_node(std::shared_ptr<Node> node) {
+        node_map_.erase(node->name());
+        return *this;
+    }
+    
+    std::shared_ptr<Node> node(const std::string& name) const {
+        if (node_map_.count(name)) {
+            return node_map_.at(name);
+        } else {
+            return nullptr;
+        }
+    }
+    std::shared_ptr<Node> node(const std::string& name) {
+        if (node_map_.count(name)) {
+            return node_map_[name];
+        } else {
+            return nullptr;
+        }
     }
     void set_pro(Processor* processor) {
         processor_.reset(processor);
     }
 private:
     friend class GraphExec;
+    friend std::ostream& operator<<(std::ostream& out, const Graph& graph);
+    std::string name_ = "";
     std::shared_ptr<Engine> engine_ = nullptr;
     std::shared_ptr<Processor> processor_ = nullptr;
+    std::unordered_map<std::string, std::shared_ptr<Node>> node_map_;
     std::vector<std::shared_ptr<Node>> nodes_;
-    std::string name_ = "";
 };
 
 std::ostream& operator<<(std::ostream& out, const Graph& graph);
 
-struct Scope {
-    Scope(Graph *graph) {
-        init(graph);
-    }
-    ~Scope() {}
-    void init(Graph *graph);
-    std::unordered_map<std::string, std::shared_ptr<Node>> node_name_map;
-    static void sort_by_exe_order(Graph *graph);
-};
+std::vector<std::shared_ptr<Node>> inodes_of(std::shared_ptr<Node>& node);
+std::vector<std::shared_ptr<Node>> onodes_of(std::shared_ptr<Node>& node);
 
 } // namespace mariana
 

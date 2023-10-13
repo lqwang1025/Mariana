@@ -18,7 +18,7 @@
 namespace mariana { namespace trt {
 
 bool TensorRTEngine::_add_reduce_node(const Node& node, const ConvertContext& context) {
-    NodeList inputs = node.inputs();
+    std::vector<std::string> inputs = node.inputs();
     MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
     ReduceFunction* func = static_cast<ReduceFunction*>(node.op());
 
@@ -37,7 +37,7 @@ bool TensorRTEngine::_add_reduce_node(const Node& node, const ConvertContext& co
         flag = flag << it;
         reduceAxes += flag;
     }
-    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
+    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]);
     nvinfer1::IReduceLayer* layer = network_->addReduce(*itensor, reduce_type_chose(), reduceAxes, func->option.keepdims);
     layer->setName(node.name().c_str());
     nvtensor_map_[node.name()] = layer->getOutput(0);

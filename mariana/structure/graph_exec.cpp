@@ -37,16 +37,16 @@ void GraphExec::run(Graph& graph, ExecContext& context) {
 }
 
 void GraphExec::pre_run(Graph& graph, ExecContext& context) {
-    for (auto& node : graph.nodes()) {
-        auto inputs = node->input_edges();
+    for (auto& node : graph.order()) {
+        auto& inputs = node->inputs();
         if (inputs.size() == 0) {
             node->pre_run({Shape{context.itensors.at(node->name()).shape}});
         } else {
             ShapeList shapes;
-            for (auto& it : inputs) {
-                Node* inode = it.get_node();
-                int ctrl_index = it.get_ctrl_index();
-                shapes.push_back(inode->shapes()[ctrl_index]);
+            for (size_t i = 0; i < inputs.size(); ++i) {
+                std::shared_ptr<Node> inode = graph.node(inputs.at(i));
+                int32_t ctrl_idx = node->ctrl_idx()[i];
+                shapes.push_back(inode->shapes()[ctrl_idx]);
             }
             node->pre_run(shapes);
         }
@@ -54,16 +54,16 @@ void GraphExec::pre_run(Graph& graph, ExecContext& context) {
 }
 
 void GraphExec::pre_run(Graph& graph, const ConvertContext& context) {
-    for (auto& node : graph.nodes()) {
-        auto inputs = node->input_edges();
+    for (auto& node : graph.order()) {
+        auto& inputs = node->inputs();
         if (inputs.size() == 0) {
             node->pre_run({Shape{context.ishapes.at(node->name())}});
         } else {
             ShapeList shapes;
-            for (auto& it : inputs) {
-                Node* inode = it.get_node();
-                int ctrl_index = it.get_ctrl_index();
-                shapes.push_back(inode->shapes()[ctrl_index]);
+            for (size_t i = 0; i < inputs.size(); ++i) {
+                std::shared_ptr<Node> inode = graph.node(inputs.at(i));
+                int32_t ctrl_idx = node->ctrl_idx()[i];
+                shapes.push_back(inode->shapes()[ctrl_idx]);
             }
             node->pre_run(shapes);
         }
