@@ -17,10 +17,10 @@
 
 namespace mariana { namespace trt {
 
-bool TensorRTEngine::_add_pool_node(const Node& node, const ConvertContext& context) {
-    std::vector<std::string> inputs = node.inputs();
-    MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
-    PoolFunction* func = static_cast<PoolFunction*>(node.op());
+bool TensorRTEngine::_add_pool_node(std::shared_ptr<Node>& node, const ConvertContext& context) {
+    std::vector<std::string> inputs = node->inputs();
+    MCHECK(inputs.size()==1)<<node->op_type()<<" support 1 input only.";
+    PoolFunction* func = static_cast<PoolFunction*>(node->op());
     nvinfer1::Dims kernel_size = {.nbDims = 2,
                                   .d = {func->option.kernel_shape[0],
                                         func->option.kernel_shape[1]}};
@@ -30,7 +30,7 @@ bool TensorRTEngine::_add_pool_node(const Node& node, const ConvertContext& cont
         } else if (func->option.type == PoolType::Avg || func->option.type == PoolType::GAvg) {
             return nvinfer1::PoolingType::kAVERAGE;
         } else {
-            MLOG(FATAL)<<"Unsupport pooling type:"<<node.op_type();
+            MLOG(FATAL)<<"Unsupport pooling type:"<<node->op_type();
         }
     };
 
@@ -40,8 +40,8 @@ bool TensorRTEngine::_add_pool_node(const Node& node, const ConvertContext& cont
     layer->setAverageCountExcludesPadding(false);
     layer->setPrePadding(nvinfer1::DimsHW(func->option.pads[0], func->option.pads[1]));
     layer->setPostPadding(nvinfer1::DimsHW(func->option.pads[2], func->option.pads[3]));
-    layer->setName(node.name().c_str());
-    nvtensor_map_[node.name()] = layer->getOutput(0);
+    layer->setName(node->name().c_str());
+    nvtensor_map_[node->name()] = layer->getOutput(0);
     return true;
 }
 

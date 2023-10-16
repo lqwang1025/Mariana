@@ -16,18 +16,18 @@
 
 namespace mariana { namespace trt {
 
-bool TensorRTEngine::_add_convolution_node(const Node& node, const ConvertContext& context) {
-    std::vector<std::string> inputs = node.inputs();
-    MCHECK(inputs.size()<2)<<node.op_type()<<" support 1 input only.";
+bool TensorRTEngine::_add_convolution_node(std::shared_ptr<Node>& node, const ConvertContext& context) {
+    std::vector<std::string> inputs = node->inputs();
+    MCHECK(inputs.size()<2)<<node->op_type()<<" support 1 input only.";
     
     std::string itname;
     if (inputs.size() == 0) {
-        itname = node.name()+input_prefix_;
+        itname = node->name()+input_prefix_;
     } else if (inputs.size() == 1) {
         itname = inputs[0];
     }
     nvinfer1::ITensor* itensor = _get_itensor(itname);
-    ConvFunction* func = static_cast<ConvFunction*>(node.op());
+    ConvFunction* func = static_cast<ConvFunction*>(node->op());
     
     const std::vector<Tensor>& weights = func->option.weights;
     nvinfer1::Weights weight{nvinfer1::DataType::kFLOAT, nullptr, 0};
@@ -59,8 +59,8 @@ bool TensorRTEngine::_add_convolution_node(const Node& node, const ConvertContex
     layer->setDilation(nvinfer1::DimsHW(func->option.dilations[0], func->option.dilations[1]));
     layer->setNbGroups(func->option.group);
 
-    layer->setName(node.name().c_str());
-    nvtensor_map_[node.name()] = layer->getOutput(0);
+    layer->setName(node->name().c_str());
+    nvtensor_map_[node->name()] = layer->getOutput(0);
 
 
     auto dims = layer->getOutput(0)->getDimensions();

@@ -46,10 +46,11 @@ Graph* parse(const ConvertContext& context) {
                 Graph* graph = onnx::parse(context.model_path);
                 GraphExec ge;
                 ge.pre_run(*graph, context);
-                transform::transform(*graph, {"base_fold_reshape_to_node",
-                            "trt_split_to_slice"});
+                transform::transform(*graph, {"trt_split_to_slice"});
                 MCHECK(engine->build_internal(*graph, context).ok());
+                graph->set_engine(engine);
                 _attach_graph_with_post_processor(context, graph);
+                return graph;
             } else { // To construct network form onnx by TRT.
                 std::shared_ptr<trt::TensorRTEngine> engine{new trt::TensorRTEngine()};
                 Graph* graph = new Graph{engine};

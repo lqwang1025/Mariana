@@ -41,6 +41,7 @@ Status TensorRTEngine::build_external(Graph& graph, const ConvertContext& contex
     parser->parseFromFile(context.model_path.c_str(), static_cast<int>(gLogger.getReportableSeverity()));
     builder_->setMaxBatchSize(context.max_batch_size);
     nvinfer1::IHostMemory* hm = builder_->buildSerializedNetwork(*network_, *config_);
+    print_trt_network(*network_);
     std::ofstream serialize_output_stream;
     std::string output_path = absl::StrReplaceAll(context.model_path, {{".onnx", ".plan"}});
     serialize_output_stream.open(output_path, std::ios::out|std::ios::binary);
@@ -58,6 +59,7 @@ Status TensorRTEngine::build_internal(Graph& graph, const ConvertContext& contex
     const auto _explicit_batch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
     network_.reset(builder_->createNetworkV2(_explicit_batch));
     _construct_network(graph, context);
+    print_trt_network(*network_);
     _setup_optimize(context); // config init
     builder_->setMaxBatchSize(context.max_batch_size);
     nvinfer1::IHostMemory* hm = builder_->buildSerializedNetwork(*network_, *config_);
@@ -184,9 +186,9 @@ Status TensorRTEngine::_construct_network(Graph& graph, const ConvertContext& co
     for (auto& node : graph.order()) {
         std::cout<<"ddd:"<<node->name()<<std::endl;
         if (layer_make_map_.count(node->op_type())) {
-            layer_make_map_[node->op_type()](this, *node, context);
+            layer_make_map_[node->op_type()](this, node, context);
         }
-        if (node->outputs().size() == 0) { // set network outputs
+        if (onodes_of(node).size() == 0) { // set network outputs
             nvinfer1::ITensor *tensor = _get_itensor(node->name());
             tensor->setName(node->name().c_str());
             network_->markOutput(*tensor);

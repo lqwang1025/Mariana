@@ -31,9 +31,10 @@ void MathConverter::run(const ::onnx::NodeProto& src, Node& dst, const OnnxScope
         MLOG(FATAL)<<"Unsupport op type:"<<src.op_type();
     }
     int constant = scope.nodes_info.at(src.name()).tensors.empty() ?
-        scope.nodes_info.at(src.name()).tensors.size() : 0;
+        0 : scope.nodes_info.at(src.name()).tensors.size();
     if (constant != 0) {
-        const ::onnx::TensorProto* weight = scope.graph_info.tensor_name_map.at(src.input(0));
+        const ::onnx::TensorProto* weight = scope.nodes_info.at(src.name()).tensors[0];
+        
         std::vector<int64_t> shape;
         void* content = nullptr;
         get_content_from_tensor(*weight, shape, &content);
