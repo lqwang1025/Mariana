@@ -72,7 +72,7 @@ bool TensorRTEngine::_add_eltwise_node(std::shared_ptr<Node>& node, const Conver
         nvtensor_map_[const_name.c_str()] = const_layer->getOutput(0);
         
         nvinfer1::ITensor* input = _get_itensor(inputs[0]);
-        nvinfer1::IElementWiseLayer* layer = network_->addElementWise(*const_layer->getOutput(0), *input, eltwise_type_chose());
+        nvinfer1::IElementWiseLayer* layer = network_->addElementWise(*input, *const_layer->getOutput(0), eltwise_type_chose());
         layer->setName(node->name().c_str());
         nvtensor_map_[node->name()] = layer->getOutput(0);
         

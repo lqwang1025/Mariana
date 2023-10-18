@@ -45,7 +45,7 @@ Status fold_reshape_to_node(Graph& graph) {
         return absl::OkStatus();
     };
     replace_matching_optypes(graph,
-                             {"RESHAPE|FLATTEN",
+                             {"FLATTEN",
                                  {
                                      {"*", {}}
                                  }

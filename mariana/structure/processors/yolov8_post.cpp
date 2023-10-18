@@ -122,7 +122,8 @@ result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& co
 	 * 8400 = 80x80+40x40+20x20
 	 */
     result_list results;
-    float* buffer = static_cast<float*>(inputs[0].data());
+    Tensor tensor = inputs[0].cpu();
+    float* buffer = static_cast<float*>(tensor.data());
     Shape shape1 = inputs[0].shape(); // [1, 8400, 81]
     int nb = shape1[0];
     int nc = shape1[2]-4*16;
@@ -172,6 +173,7 @@ result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& co
             }
             buffer += (option.grids[i]*option.grids[i]*(64+nc));
         }
+        std::cout<<"dd:"<<__results.size()<<std::endl;
         nms(__results, option.iou_thresh);
         for (auto& it : __results) {
             it.bbox.tl.x -= it.cls_idx*600;

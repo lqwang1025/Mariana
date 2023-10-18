@@ -46,7 +46,7 @@ Graph* parse(const ConvertContext& context) {
                 Graph* graph = onnx::parse(context.model_path);
                 GraphExec ge;
                 ge.pre_run(*graph, context);
-                transform::transform(*graph, {"trt_split_to_slice"});
+                transform::transform(*graph, {"trt_split_to_slice", "base_fold_reshape_to_node", "trt_softmax_io_reshape"});
                 MCHECK(engine->build_internal(*graph, context).ok());
                 graph->set_engine(engine);
                 _attach_graph_with_post_processor(context, graph);
