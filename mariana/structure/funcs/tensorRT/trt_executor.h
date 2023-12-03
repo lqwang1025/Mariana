@@ -44,7 +44,7 @@ private:
     nvinfer1::ITensor* _get_itensor(const std::string& iname);
     nvinfer1::ITensor* _add_input(const Shape& shape, const std::string& name, nvinfer1::DataType type);
     Status _construct_network(Graph& graph, const proto::ModelInfo& model_info);
-private:    
+private:
     bool _add_convolution_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
     bool _add_act_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
     bool _add_pool_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
@@ -56,8 +56,7 @@ private:
     bool _add_slice_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
     bool _add_concat_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
     bool _add_resize_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
-    bool _add_transpose_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
-    
+    bool _add_transpose_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);    
 private:
     const std::string input_prefix_ = "_minput";
     std::unique_ptr<nvinfer1::IBuilder> builder_ = nullptr;
