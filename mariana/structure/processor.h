@@ -19,45 +19,45 @@
 #include <core/utils/logging.h>
 #include <structure/tensor.h>
 #include <api/mariana_api.h>
+#include <api/proto/mariana.pb.h>
 
 namespace mariana {
 
 using tensor_list = std::vector<Tensor>;
-using result_list = std::vector<MResult>;
 
 struct Processor {
     Processor() {}
-    Processor(const ConvertContext&) {}
+    Processor(const proto::ModelInfo& model_info) {} // for register
     virtual ~Processor() {}
-    result_list operator()(tensor_list&& inputs, ExecContext& context) {
-        result_list results = work(std::move(inputs), context);
+    MResult operator()(tensor_list&& inputs, ExecContext& context) {
+        MResult results = work(std::move(inputs), context);
         return results;
     }
-    virtual result_list work(tensor_list&& inputs, ExecContext& context)=0;
+    virtual MResult work(tensor_list&& inputs, ExecContext& context)=0;
 };
 
 class ProcessorHolder final {
 public:
-    using FuncMake = std::function<Processor*(const ConvertContext&)>;
-    typedef std::unordered_map<ProcessorCategory, FuncMake> FuncMap;
+    using FuncMake = std::function<Processor*(const proto::ModelInfo&)>;
+    typedef std::unordered_map<proto::PostProcessorCategory, FuncMake> FuncMap;
     static FuncMap& get_func_map() {
         static FuncMap* func_map = new FuncMap;
         return *func_map;
     }
     
-    static void add_func(const ProcessorCategory& category, FuncMake func) {
+    static void add_func(const proto::PostProcessorCategory& category, FuncMake func) {
         FuncMap& func_map = get_func_map();
         if (func_map.count(category) == 1) {
-            MVLOG(WARNING)<<"FUNC "<<static_cast<int>(category)<<" had been registred.";
+            MVLOG(WARNING)<<"FUNC "<<category<<" had been registred.";
             return;
         }
         func_map[category] = func;
     }
 
-    static FuncMake search(const ProcessorCategory& category) {
+    static FuncMake search(const proto::PostProcessorCategory& category) {
         FuncMap& func_map = get_func_map();
         if (func_map.size() == 0 || func_map.count(category) == 0) {
-            MVLOG(FATAL)<<"There is no func in registry:"<<static_cast<int>(category);
+            MVLOG(FATAL)<<"There is no func in registry:"<<category;
             return nullptr;
         }
         return func_map[category];

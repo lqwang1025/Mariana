@@ -32,28 +32,31 @@ namespace mariana { namespace trt {
 //   one is to build NetWork directly, and the other is to build it through TRT's APIs.
 class TensorRTEngine : public ::mariana::Engine {
 public:
-    using TrtLayerMake = std::function<bool(TensorRTEngine*, const Node&, const ConvertContext&)>;
+    using TrtLayerMake = std::function<bool(TensorRTEngine*, std::shared_ptr<Node>&, const proto::ModelInfo&)>;
     TensorRTEngine();
     ~TensorRTEngine();
-    Status build_external(Graph& graph, const ConvertContext& context) override;
-    Status build_internal(Graph& graph, const ConvertContext& context) override;
-    Status de_serialize(Graph& graph, const ConvertContext& context) override;
+    Status build_external(Graph& graph, const proto::ModelInfo& model_info) override;
+    Status build_internal(Graph& graph, const proto::ModelInfo& model_info) override;
+    Status de_serialize(Graph& graph, const proto::ModelInfo& model_info) override;
     Status run(const ExecContext& context) override;
 private:
-    void _setup_optimize(const ConvertContext& context);
+    void _setup_optimize(const proto::ModelInfo& model_info);
     nvinfer1::ITensor* _get_itensor(const std::string& iname);
     nvinfer1::ITensor* _add_input(const Shape& shape, const std::string& name, nvinfer1::DataType type);
-    Status _construct_network(Graph& graph, const ConvertContext& context);
+    Status _construct_network(Graph& graph, const proto::ModelInfo& model_info);
 private:    
-    bool _add_convolution_node(const Node& node, const ConvertContext& context);
-    bool _add_act_node(const Node& node, const ConvertContext& context);
-    bool _add_pool_node(const Node& node, const ConvertContext& context);
-    bool _add_eltwise_node(const Node& node, const ConvertContext& context);
-    bool _add_reshape_node(const Node& node, const ConvertContext& context);
-    bool _add_softmax_node(const Node& node, const ConvertContext& context);
-    bool _add_fc_node(const Node& node, const ConvertContext& context);
-    bool _add_reduce_node(const Node& node, const ConvertContext& context);
-    bool _add_slice_node(const Node& node, const ConvertContext& context);
+    bool _add_convolution_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_act_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_pool_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_eltwise_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_reshape_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_softmax_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_fc_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_reduce_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_slice_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_concat_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_resize_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
+    bool _add_transpose_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info);
     
 private:
     const std::string input_prefix_ = "_minput";
@@ -69,6 +72,8 @@ private:
         {MSIGMOID, &TensorRTEngine::_add_act_node},
         {MMAXPOOL, &TensorRTEngine::_add_pool_node},
         {MADD, &TensorRTEngine::_add_eltwise_node},
+        {MSUB, &TensorRTEngine::_add_eltwise_node},
+        {MDIV, &TensorRTEngine::_add_eltwise_node},
         {MMUL, &TensorRTEngine::_add_eltwise_node},
         {MGAVPOOL, &TensorRTEngine::_add_pool_node},
         {MRESHAPE, &TensorRTEngine::_add_reshape_node},
@@ -76,6 +81,10 @@ private:
         {MGEMM, &TensorRTEngine::_add_fc_node},
         {MREDUCEMEAN, &TensorRTEngine::_add_reduce_node},
         {MSLICE, &TensorRTEngine::_add_slice_node},
+        {MCONCAT, &TensorRTEngine::_add_concat_node},
+        {MRESIZE, &TensorRTEngine::_add_resize_node},
+        {MPERMUTE, &TensorRTEngine::_add_transpose_node},
+        {MFLATTEN, &TensorRTEngine::_add_reshape_node},
     };
     std::unordered_map<std::string, nvinfer1::ITensor*> nvtensor_map_;
 };

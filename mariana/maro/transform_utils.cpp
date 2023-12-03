@@ -143,8 +143,7 @@ Status replace_matching_optypes(Graph& src, const OpTypePattern& pattern,
         src.update_node(node);
     }
     src.finilize();
-    std::cout<<"dd:"<<src<<std::endl;
-    // std::cout<<"dd:"<<*dst<<std::endl;
+    // std::cout<<"dd:"<<src<<std::endl;
     return status;
 }
 

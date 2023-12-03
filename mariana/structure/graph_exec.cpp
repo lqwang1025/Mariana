@@ -16,20 +16,8 @@
 namespace mariana {
 
 void GraphExec::run(Graph& graph, ExecContext& context) {
-    context.otensors.clear();
     if (graph.engine_) {
         graph.engine_->run(context);
-        for (size_t i = 0; i < graph.engine_->otensors.size(); ++i) {
-            MTensor tensor;
-            Tensor& src = graph.engine_->otensors[i];
-            for (auto it : src.shape().data()) {
-                tensor.shape.push_back(it);
-            }
-            tensor.input = src.data();
-            tensor.dtype = src.dtype();
-            tensor.device = src.device().type();
-            context.otensors.push_back(tensor);
-        }
     }
     if (graph.processor_) {
         results = (*graph.processor_)(std::move(graph.engine_->otensors), context);
@@ -53,11 +41,16 @@ void GraphExec::pre_run(Graph& graph, ExecContext& context) {
     }
 }
 
-void GraphExec::pre_run(Graph& graph, const ConvertContext& context) {
+void GraphExec::pre_run(Graph& graph, const proto::ModelInfo& model_info) {
     for (auto& node : graph.order()) {
         auto& inputs = node->inputs();
         if (inputs.size() == 0) {
-            node->pre_run({Shape{context.ishapes.at(node->name())}});
+            std::vector<int32_t> shape;
+            shape.reserve(model_info.ishapes().at(node->name()).dim_size());
+            for (size_t i = 0; i < model_info.ishapes().at(node->name()).dim_size(); ++i) {
+                shape.push_back(model_info.ishapes().at(node->name()).dim(i));
+            }
+            node->pre_run({Shape{shape}});
         } else {
             ShapeList shapes;
             for (size_t i = 0; i < inputs.size(); ++i) {

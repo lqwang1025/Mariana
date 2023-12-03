@@ -25,13 +25,13 @@ public:
         itensors.clear();
         otensors.clear();
     }
-    virtual Status build_external(Graph& graph, const ConvertContext& context) {
+    virtual Status build_external(Graph& graph, const proto::ModelInfo& model_info) {
         return absl::UnimplementedError("Engine build_external method is not implemented");
     }
-    virtual Status build_internal(Graph& graph, const ConvertContext& context) {
+    virtual Status build_internal(Graph& graph, const proto::ModelInfo& model_info) {
         return absl::UnimplementedError("Engine build_internal method is not implemented");
     }
-    virtual Status de_serialize(Graph& graph, const ConvertContext& context)=0;
+    virtual Status de_serialize(Graph& graph, const proto::ModelInfo& model_info)=0;
     virtual Status run(const ExecContext& context)=0;
     std::vector<Tensor> itensors;
     std::vector<Tensor> otensors;

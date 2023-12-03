@@ -173,6 +173,10 @@ public:
     std::shared_ptr<Engine> engine() const {
         return engine_;
     }
+
+    void set_engine(std::shared_ptr<Engine> engine) {
+        engine_ = engine;
+    }
     
     size_t num_of_nodes(void) const {
         return node_map_.size();

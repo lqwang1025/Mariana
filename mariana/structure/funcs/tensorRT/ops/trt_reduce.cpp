@@ -17,10 +17,10 @@
 
 namespace mariana { namespace trt {
 
-bool TensorRTEngine::_add_reduce_node(const Node& node, const ConvertContext& context) {
-    std::vector<std::string> inputs = node.inputs();
-    MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
-    ReduceFunction* func = static_cast<ReduceFunction*>(node.op());
+bool TensorRTEngine::_add_reduce_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info) {
+    std::vector<std::string> inputs = node->inputs();
+    MCHECK(inputs.size()==1)<<node->op_type()<<" support 1 input only.";
+    ReduceFunction* func = static_cast<ReduceFunction*>(node->op());
 
     auto reduce_type_chose = [&]()->nvinfer1::ReduceOperation {
         if (func->option.method == ReduceMethod::SUM) {
@@ -28,7 +28,7 @@ bool TensorRTEngine::_add_reduce_node(const Node& node, const ConvertContext& co
         } else if (func->option.method == ReduceMethod::MEAN) {
             return nvinfer1::ReduceOperation::kAVG;
         } else {
-            MLOG(FATAL)<<"Unsupport reduce type:"<<node.op_type();
+            MLOG(FATAL)<<"Unsupport reduce type:"<<node->op_type();
         }
     };
     uint32_t reduceAxes = 0;
@@ -39,8 +39,8 @@ bool TensorRTEngine::_add_reduce_node(const Node& node, const ConvertContext& co
     }
     nvinfer1::ITensor* itensor = _get_itensor(inputs[0]);
     nvinfer1::IReduceLayer* layer = network_->addReduce(*itensor, reduce_type_chose(), reduceAxes, func->option.keepdims);
-    layer->setName(node.name().c_str());
-    nvtensor_map_[node.name()] = layer->getOutput(0);
+    layer->setName(node->name().c_str());
+    nvtensor_map_[node->name()] = layer->getOutput(0);
     auto dims = layer->getOutput(0)->getDimensions();
     auto dim = itensor->getDimensions();
     return true;

@@ -1,0 +1,54 @@
+syntax = "proto3";
+package mariana.proto;
+
+enum PostProcessorCategory {
+	POST_NONE = 0;
+	YOLOV8_POST_ONE_OUTPUT = 1;
+    YOLOV8_POST_THREE_OUTPUT  = 2;
+}
+
+enum ImageFormat {
+	IMG_FMT_NONE = 0;
+	IMG_RGB888 = 1;
+    IMG_BGR888 = 2;
+	IMG_BGRA8888 = 3;
+	IMG_RGBA8888 = 4;
+	IMG_GRAY8 = 5;
+}
+
+enum BackEndType {
+	BACKEND_NONE = 0;
+	BACKEND_TRT = 1;
+	BACKEND_RKNN = 2;
+}
+
+enum ModelPrecisionType {
+	MDL_PRCSN_TYPE_NONE = 0;
+	MDL_PRCSN_TYPE_FP16 = 1;
+	MDL_PRCSN_TYPE_FP32 = 2;
+	MDL_PRCSN_TYPE_INT8 = 3;
+	MDL_PRCSN_TYPE_UINT8 = 4;
+}
+
+message InputShape {
+  repeated int32 dim = 1 [packed = true];
+}
+
+message ModelInfo {
+	string model_path = 1;
+	bool from_scratch = 2;
+	int32 max_batch_size = 3;
+	PostProcessorCategory post_process_category = 4;
+	ImageFormat img_fmt = 5;
+	BackEndType back_end = 6;
+	float iou_thresh = 7;
+	float conf_thresh = 8;
+	float grid_offset = 9;
+	repeated int32 grids = 10;
+	repeated int32 strides = 11;
+	repeated string labels = 12;
+	map<string, InputShape> ishapes = 13;
+	ModelPrecisionType mdl_prcsn = 14;
+	repeated float means = 15;
+	repeated float stds = 16;
+}

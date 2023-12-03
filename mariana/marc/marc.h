@@ -16,13 +16,13 @@
 #include <unordered_map>
 
 #include <core/impl/shape.h>
-#include <api/mariana_api.h>
+#include <api/proto/mariana.pb.h>
 
 namespace mariana {
 
 class Graph;
 
-Graph* parse(const ConvertContext& context);
+Graph* parse(const proto::ModelInfo& model_info);
 
 } // namespace mariana
 

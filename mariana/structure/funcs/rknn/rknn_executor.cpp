@@ -67,8 +67,8 @@ uint8_t* RknnEngine::_load_model(const std::string& filename, int* model_size) {
 	return data;
 }
 
-Status RknnEngine::de_serialize(Graph& graph, const ConvertContext& context) {
-    uint8_t* model_data = _load_model(context.model_path, &model_size_);
+Status RknnEngine::de_serialize(Graph& graph, const proto::ModelInfo& model_info) {
+    uint8_t* model_data = _load_model(model_info.model_path(), &model_size_);
     RET_CHECKER(rknn_init(&ctx_, model_data, model_size_, 0));
     free(model_data);
     rknn_sdk_version version;

@@ -17,7 +17,7 @@
 
 #include <structure/ir.h>
 #include <structure/tensor.h>
-#include <api/mariana_api.h>
+#include <api/proto/mariana.pb.h>
 
 namespace mariana {
 
@@ -27,8 +27,8 @@ public:
     ~GraphExec() {}
     void run(Graph& graph, ExecContext& context);
     void pre_run(Graph& graph, ExecContext& context);
-    void pre_run(Graph& graph, const ConvertContext& context);
-    result_list results;
+    void pre_run(Graph& graph, const proto::ModelInfo& model_info);
+    MResult results;
 };
 
 } // namespace mariana

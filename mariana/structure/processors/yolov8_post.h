@@ -36,28 +36,44 @@ struct Yolov8PostOption : public BaseOption {
 };
 
 struct Yolov8OnePostProcessor : public Processor {
-    Yolov8OnePostProcessor(const ConvertContext& context) {
-        option.iou_thresh  = context.iou_thresh;
-        option.conf_thresh = context.conf_thresh;
-        option.labels      = context.labels;
+    Yolov8OnePostProcessor(const proto::ModelInfo& model_info) {
+        option.iou_thresh  = model_info.iou_thresh();
+        option.conf_thresh = model_info.conf_thresh();
+        option.labels.reserve(model_info.labels_size());
+        for (size_t i = 0; i < model_info.labels_size(); ++i) {
+            option.labels.push_back(model_info.labels(i));
+        }
     }
     ~Yolov8OnePostProcessor() {}
     Yolov8PostOption option;
-    result_list work(tensor_list&& inputs, ExecContext& context) override;
+    MResult work(tensor_list&& inputs, ExecContext& context) override;
 };
 
 struct Yolov8ThreePostProcessor : public Processor {
-    Yolov8ThreePostProcessor(const ConvertContext& context) {
-        option.iou_thresh  = context.iou_thresh;
-        option.conf_thresh = context.conf_thresh;
-        option.grids       = context.grids;
-        option.strides     = context.strides;
-        option.labels      = context.labels;
-        option.grid_offset = context.grid_offset;
+    Yolov8ThreePostProcessor(const proto::ModelInfo& model_info) {
+        option.iou_thresh  = model_info.iou_thresh();
+        option.conf_thresh = model_info.conf_thresh();
+        option.grid_offset = model_info.grid_offset();
+        
+        option.labels.reserve(model_info.labels_size());
+        for (size_t i = 0; i < model_info.labels_size(); ++i) {
+            option.labels.push_back(model_info.labels(i));
+        }
+
+        option.grids.reserve(model_info.grids_size());
+        for (size_t i = 0; i < model_info.grids_size(); ++i) {
+            option.grids.push_back(model_info.grids(i));
+        }
+
+        option.strides.reserve(model_info.strides_size());
+        for (size_t i = 0; i < model_info.strides_size(); ++i) {
+            option.strides.push_back(model_info.strides(i));
+        }
+        
     }
     ~Yolov8ThreePostProcessor() {}
     Yolov8PostOption option;
-    result_list work(tensor_list&& inputs, ExecContext& context) override;
+    MResult work(tensor_list&& inputs, ExecContext& context) override;
 };
 
 

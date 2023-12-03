@@ -30,7 +30,7 @@ class RknnEngine : public ::mariana::Engine {
 public:
     RknnEngine();
     virtual ~RknnEngine();
-    Status de_serialize(Graph& graph, const ConvertContext& context) override;
+    Status de_serialize(Graph& graph, const proto::ModelInfo& model_info) override;
     Status run(const ExecContext& context) override;
 private:
     uint8_t* _load_data(FILE* fp, size_t ofst, size_t sz);

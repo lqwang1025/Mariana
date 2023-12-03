@@ -47,34 +47,36 @@ static float iou_of(const Rect& a, const Rect& b) {
 	return inter_area/union_area;
 }
 
-static void nms(result_list& dets, float iou_thresh) {
-	result_list results;
-	while (!dets.empty()) {
-		std::sort(dets.begin(), dets.end(), [&](MResult& a, MResult& b) {return a.score > b.score;});
-		results.push_back(dets[0]);
-		for (auto it = dets.begin()+1; it != dets.end(); ++it) {
-			float iou = iou_of(dets[0].bbox, it->bbox);
+static void nms(InferResult& result, float iou_thresh) {
+	std::vector<NNResult> collection;
+	while (!result.collection.empty()) {
+		std::sort(result.collection.begin(), result.collection.end(),
+                  [&](NNResult& a, NNResult& b) {return a.score > b.score;});
+		collection.push_back(result.collection[0]);
+		for (auto it = result.collection.begin()+1; it != result.collection.end(); ++it) {
+			float iou = iou_of(result.collection[0].bbox, it->bbox);
 			if (iou > iou_thresh) {
-				it = dets.erase(it);
+				it = result.collection.erase(it);
 				it--;
 			}
 		}
-		dets.erase(dets.begin());
+		result.collection.erase(result.collection.begin());
 	}
-	dets = results;
+	result.collection = collection;
 }
 
-result_list Yolov8OnePostProcessor::work(tensor_list&& inputs, ExecContext& context) {
+MResult Yolov8OnePostProcessor::work(tensor_list&& inputs, ExecContext& context) {
     // The shape like : 1x8400x(4+cls_number)
     Tensor tensor = inputs[0].cpu();
-    result_list results;
+    MResult results;
+    results.identification = context.identification;
     Shape shape = tensor.shape();
     int nb = shape[0];
     int ng = shape[1];
     int nc = shape[2];
     
     for (int n = 0; n < nb; ++n) {
-        result_list __results;
+        InferResult infer_result;
         int nstride = n*ng*nc;
         for (int g = 0; g < ng; ++g) {
             int gstride = g*nc;
@@ -93,41 +95,42 @@ result_list Yolov8OnePostProcessor::work(tensor_list&& inputs, ExecContext& cont
             float cy = tensor.data_ptr_impl<float>()[nstride+gstride+1];
             float w  = tensor.data_ptr_impl<float>()[nstride+gstride+2];
             float h  = tensor.data_ptr_impl<float>()[nstride+gstride+3];
-            MResult result;
-            result.batch_idx  = n;
+            NNResult result;
             result.cls_idx    = index;
             result.class_name = option.labels[index];
             result.score      = max;
-            result.bbox.tl.x  = (cx - w/2 - context.pad_w)/context.scale+index*600;
-			result.bbox.tl.y  = (cy - h/2 - context.pad_h)/context.scale+index*600;
-			result.bbox.br.x  = (cx + w/2 - context.pad_w)/context.scale+index*600;
-			result.bbox.br.y  = (cy + h/2 - context.pad_h)/context.scale+index*600;
-            __results.push_back(result);
+            result.bbox.tl.x  = (cx - w/2 - context.info.pad_w)/context.info.scale+index*600;
+			result.bbox.tl.y  = (cy - h/2 - context.info.pad_h)/context.info.scale+index*600;
+			result.bbox.br.x  = (cx + w/2 - context.info.pad_w)/context.info.scale+index*600;
+			result.bbox.br.y  = (cy + h/2 - context.info.pad_h)/context.info.scale+index*600;
+            infer_result.collection.push_back(result);
         }
-        nms(__results, option.iou_thresh);
-        for (auto& it : __results) {
+        nms(infer_result, option.iou_thresh);
+        for (auto& it : infer_result.collection) {
             it.bbox.tl.x -= it.cls_idx*600;
             it.bbox.tl.y -= it.cls_idx*600;
             it.bbox.br.x -= it.cls_idx*600;
             it.bbox.br.y -= it.cls_idx*600;
-            results.push_back(it);
         }
+        results.collection.push_back(infer_result);
     }
     return results;
 }
 
-result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& context) {
+MResult Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& context) {
     /*
 	 * output shape like: 1x8400x81 (81=4*16+nc)
 	 * 8400 = 80x80+40x40+20x20
 	 */
-    result_list results;
-    float* buffer = static_cast<float*>(inputs[0].data());
+    MResult results;
+    results.identification = context.identification;
+    Tensor tensor = inputs[0].cpu();
+    float* buffer = static_cast<float*>(tensor.data());
     Shape shape1 = inputs[0].shape(); // [1, 8400, 81]
     int nb = shape1[0];
     int nc = shape1[2]-4*16;
     for (int n = 0; n < nb; ++n) {
-        result_list __results;
+        InferResult infer_result;
         for (size_t i = 0; i < option.grids.size(); ++i) {
             for (int h = 0; h < option.grids[i]; ++h) {
                 int h_offset = h*option.grids[i]*(64+nc);
@@ -158,28 +161,27 @@ result_list Yolov8ThreePostProcessor::work(tensor_list&& inputs, ExecContext& co
                     float y0 = static_cast<float>(h) - coordinate[1] + option.grid_offset;
                     float x1 = static_cast<float>(w) + coordinate[2] + option.grid_offset;
                     float y1 = static_cast<float>(h) + coordinate[3] + option.grid_offset;
-                    MResult result;
-                    result.batch_idx  = n;
+                    NNResult result;
                     result.cls_idx    = index;
                     result.class_name = option.labels[index];
                     result.score      = max;
-					result.bbox.tl.x  = (x0*(option.strides[i])-context.pad_w)/context.scale+index*600;
-					result.bbox.tl.y  = (y0*(option.strides[i])-context.pad_h)/context.scale+index*600;
-					result.bbox.br.x  = (x1*(option.strides[i])-context.pad_w)/context.scale+index*600;
-					result.bbox.br.y  = (y1*(option.strides[i])-context.pad_h)/context.scale+index*600;
-					__results.push_back(result);
+					result.bbox.tl.x  = (x0*(option.strides[i])-context.info.pad_w)/context.info.scale+index*600;
+					result.bbox.tl.y  = (y0*(option.strides[i])-context.info.pad_h)/context.info.scale+index*600;
+					result.bbox.br.x  = (x1*(option.strides[i])-context.info.pad_w)/context.info.scale+index*600;
+					result.bbox.br.y  = (y1*(option.strides[i])-context.info.pad_h)/context.info.scale+index*600;
+					infer_result.collection.push_back(result);
                 }
             }
             buffer += (option.grids[i]*option.grids[i]*(64+nc));
         }
-        nms(__results, option.iou_thresh);
-        for (auto& it : __results) {
+        nms(infer_result, option.iou_thresh);
+        for (auto& it : infer_result.collection) {
             it.bbox.tl.x -= it.cls_idx*600;
             it.bbox.tl.y -= it.cls_idx*600;
             it.bbox.br.x -= it.cls_idx*600;
             it.bbox.br.y -= it.cls_idx*600;
-            results.push_back(it);
         }
+        results.collection.push_back(infer_result);
     }
     return results;
 }

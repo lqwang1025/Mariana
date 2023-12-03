@@ -30,51 +30,58 @@ TensorRTEngine::TensorRTEngine() {}
 
 TensorRTEngine::~TensorRTEngine() {
     cudaStreamDestroy(stream_);
+    context_.release();
+    engine_.release();
+    config_.release();
+    network_.release();
+    builder_.release();
 }
 
-Status TensorRTEngine::build_external(Graph& graph, const ConvertContext& context) {
+Status TensorRTEngine::build_external(Graph& graph, const proto::ModelInfo& model_info) {
     builder_.reset(nvinfer1::createInferBuilder(gLogger));
     const auto _explicit_batch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
-    _setup_optimize(context); // config init
+    _setup_optimize(model_info); // config init
     network_.reset(builder_->createNetworkV2(_explicit_batch));
     auto parser = nvonnxparser::createParser(*network_, gLogger);
-    parser->parseFromFile(context.model_path.c_str(), static_cast<int>(gLogger.getReportableSeverity()));
-    builder_->setMaxBatchSize(context.max_batch_size);
+    parser->parseFromFile(model_info.model_path().c_str(), static_cast<int>(gLogger.getReportableSeverity()));
+    builder_->setMaxBatchSize(model_info.max_batch_size());
     nvinfer1::IHostMemory* hm = builder_->buildSerializedNetwork(*network_, *config_);
+    print_trt_network(*network_);
     std::ofstream serialize_output_stream;
-    std::string output_path = absl::StrReplaceAll(context.model_path, {{".onnx", ".plan"}});
+    std::string output_path = absl::StrReplaceAll(model_info.model_path(), {{".onnx", ".plan"}});
     serialize_output_stream.open(output_path, std::ios::out|std::ios::binary);
     serialize_output_stream.write((const char*)hm->data(), hm->size());
     serialize_output_stream.close();
     parser->destroy();
-    ConvertContext __context;
-    __context.model_path = output_path;
-    de_serialize(graph, __context);
+    proto::ModelInfo __model_info;
+    __model_info.set_model_path(output_path);
+    de_serialize(graph, __model_info);
     return absl::OkStatus();
 }
 
-Status TensorRTEngine::build_internal(Graph& graph, const ConvertContext& context) {
+Status TensorRTEngine::build_internal(Graph& graph, const proto::ModelInfo& model_info) {
     builder_.reset(nvinfer1::createInferBuilder(gLogger));
     const auto _explicit_batch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
     network_.reset(builder_->createNetworkV2(_explicit_batch));
-    _construct_network(graph, context);
-    _setup_optimize(context); // config init
-    builder_->setMaxBatchSize(context.max_batch_size);
+    _construct_network(graph, model_info);
+    print_trt_network(*network_);
+    _setup_optimize(model_info); // config init
+    builder_->setMaxBatchSize(model_info.max_batch_size());
     nvinfer1::IHostMemory* hm = builder_->buildSerializedNetwork(*network_, *config_);
     std::ofstream serialize_output_stream;
-    std::string output_path = absl::StrReplaceAll(context.model_path, {{".onnx", ".plan"}});
+    std::string output_path = absl::StrReplaceAll(model_info.model_path(), {{".onnx", ".plan"}});
     serialize_output_stream.open(output_path, std::ios::out|std::ios::binary);
     serialize_output_stream.write((const char*)hm->data(), hm->size());
     serialize_output_stream.close();
-    ConvertContext __context;
-    __context.model_path = output_path;
-    de_serialize(graph, __context);
+    proto::ModelInfo __model_info;
+    __model_info.set_model_path(output_path);
+    de_serialize(graph, __model_info);
     return absl::OkStatus();
 }
 
-Status TensorRTEngine::de_serialize(Graph& graph, const ConvertContext& context) {
+Status TensorRTEngine::de_serialize(Graph& graph, const proto::ModelInfo& model_info) {
     std::fstream in;
-	in.open(context.model_path, std::ios::binary | std::ios::in);
+	in.open(model_info.model_path(), std::ios::binary | std::ios::in);
     if (!in.is_open()) {
         return absl::UnavailableError("TRT model open failed");
     }
@@ -174,19 +181,23 @@ nvinfer1::ITensor* TensorRTEngine::_get_itensor(const std::string& iname) {
     }
 }
 
-Status TensorRTEngine::_construct_network(Graph& graph, const ConvertContext& context) {
-    for (auto& it : context.ishapes) { // set network inputs
+Status TensorRTEngine::_construct_network(Graph& graph, const proto::ModelInfo& model_info) {
+    for (auto& it : model_info.ishapes()) { // set network inputs
         std::string itname = it.first+input_prefix_;
-        Shape shape(it.second);
+        std::vector<int32_t> vshape;
+        vshape.reserve(it.second.dim_size());
+        for (size_t i = 0; i < it.second.dim_size(); ++i) {
+            vshape.push_back(it.second.dim(i));
+        }
+        Shape shape{vshape};
         nvtensor_map_[itname] = _add_input(shape, itname, nvinfer1::DataType::kFLOAT);
     }
     
     for (auto& node : graph.order()) {
-        std::cout<<"ddd:"<<node->name()<<std::endl;
         if (layer_make_map_.count(node->op_type())) {
-            layer_make_map_[node->op_type()](this, *node, context);
+            layer_make_map_[node->op_type()](this, node, model_info);
         }
-        if (node->outputs().size() == 0) { // set network outputs
+        if (onodes_of(node).size() == 0) { // set network outputs
             nvinfer1::ITensor *tensor = _get_itensor(node->name());
             tensor->setName(node->name().c_str());
             network_->markOutput(*tensor);
@@ -195,14 +206,14 @@ Status TensorRTEngine::_construct_network(Graph& graph, const ConvertContext& co
     return absl::OkStatus();
 }
 
-void TensorRTEngine::_setup_optimize(const ConvertContext& context) {
+void TensorRTEngine::_setup_optimize(const proto::ModelInfo& model_info) {
     config_.reset(builder_->createBuilderConfig());
-    switch (context.mode) {
-    case ModelMode::FP16 :
+    switch (model_info.mdl_prcsn()) {
+    case proto::ModelPrecisionType::MDL_PRCSN_TYPE_FP16 :
+    case proto::ModelPrecisionType::MDL_PRCSN_TYPE_FP32 :
         config_->setFlag(nvinfer1::BuilderFlag::kFP16);
         break;
-    case ModelMode::INT8 :
-    case ModelMode::QATINT8 :
+    case proto::ModelPrecisionType::MDL_PRCSN_TYPE_INT8 :
         config_->setFlag(nvinfer1::BuilderFlag::kINT8);
         break;
     default:

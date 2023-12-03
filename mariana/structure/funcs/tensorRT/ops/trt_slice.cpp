@@ -17,33 +17,29 @@
 
 namespace mariana { namespace trt {
 
-bool TensorRTEngine::_add_slice_node(const Node& node, const ConvertContext& context) {
-    NodeList inputs = node.inputs();
-    MCHECK(inputs.size()==1)<<node.op_type()<<" support 1 input only.";
-    SliceFunction* func = static_cast<SliceFunction*>(node.op());
+bool TensorRTEngine::_add_slice_node(std::shared_ptr<Node>& node, const proto::ModelInfo& model_info) {
+    std::vector<std::string> inputs = node->inputs();
+    MCHECK(inputs.size()==1)<<node->op_type()<<" support 1 input only.";
+
+    std::shared_ptr<Node> inode = inodes_of(node)[0];
     
     nvinfer1::Dims start, size, stride;
-    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]->name());
-    // int32_t p = 0;
-    // for (auto& it : node.output_edges()) {
-
-    //     start.nbDims  = inputs[0]->shapes()[0].dims();
-    //     size.nbDims   = inputs[0]->shapes()[0].dims();
-    //     stride.nbDims = inputs[0]->shapes()[0].dims();
-    //     int32_t ctrl_index = it.get_ctrl_index();
-    //     for (uint8_t i = 0; i < inputs[0]->shapes()[0].dims(); ++i) {
-    //         start.d[i] = 0;
-    //         size.d[i] = node.shapes()[ctrl_index][i];
-    //         stride.d[i] = 1;
-    //     }
-    //     start.d[func->option.axis] = splits[ctrl_index];
-    //     nvinfer1::ISliceLayer* layer = network_->addSlice(*itensor, start, size, stride);
-    //     MCHECK(layer!=nullptr)<<"Mariana: create layer slice failed!";
-    //     std::string layer_name = node.name() + std::to_string(p++);
-    //     layer->setName(layer_name.c_str());
-    //     nvtensor_map_[layer_name] = layer->getOutput(0);
-    //     std::cout<<"layer_name:"<<layer_name<<std::endl;
-    // }
+    start.nbDims  = inode->shapes()[0].dims();
+    size.nbDims   = inode->shapes()[0].dims();
+    stride.nbDims = inode->shapes()[0].dims();
+    
+    for (uint8_t i = 0; i < inode->shapes()[0].dims(); ++i) {
+        start.d[i] = 0;
+        size.d[i] = node->shapes()[0][i];
+        stride.d[i] = 1;
+    }
+    SliceFunction* func = static_cast<SliceFunction*>(node->op());
+    start.d[func->option.axis] = func->option.begin;
+    nvinfer1::ITensor* itensor = _get_itensor(inputs[0]);
+    nvinfer1::ISliceLayer* layer = network_->addSlice(*itensor, start, size, stride);
+    MCHECK(layer!=nullptr)<<"Mariana: create layer slice failed!";
+    layer->setName(node->name().c_str());
+    nvtensor_map_[node->name()] = layer->getOutput(0);
     return true;
 }
 

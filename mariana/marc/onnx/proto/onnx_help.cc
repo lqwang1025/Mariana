@@ -120,6 +120,9 @@ void get_content_from_tensor(const ::onnx::TensorProto& tensor, std::vector<int6
     for (auto dim : tensor.dims()) {
         shape.push_back(dim);
     }
+    if (tensor.dims_size() == 0) {
+        shape.push_back(1);
+    }
     *content = static_cast<void*>(const_cast<char*>(tensor.raw_data().data()));
 }
 

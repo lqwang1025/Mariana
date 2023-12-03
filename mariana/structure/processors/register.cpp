@@ -13,11 +13,12 @@
 #include <structure/processors/yolov8_post.h>
 
 namespace mariana {
+using namespace proto;
 
 #define ADD_PROCESSOR(identity, type)                                   \
-    static auto __##identity##_make = [](const ConvertContext& context)->Processor* \
-    { return new type{context}; };                                      \
-    ProcessorHolder::add_func(ProcessorCategory::identity, __##identity##_make)
+    static auto __##identity##_make = [](const proto::ModelInfo& model_info)->Processor* \
+    { return new type{model_info}; };                                   \
+    ProcessorHolder::add_func(PostProcessorCategory::identity, __##identity##_make)
 
 void register_processors() {
     ADD_PROCESSOR(YOLOV8_POST_ONE_OUTPUT, Yolov8OnePostProcessor);
